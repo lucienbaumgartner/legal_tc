@@ -74,6 +74,6 @@ for(i in datasets){
   df <- filter(df, TARGET%in%search.terms$word)
   #table(df$TARGET)
   out <- paste0('../output/02-finalized-corpora/', gsub('.*\\/', '', i))
-  save(df, file=out)
+  save(df, file='../output/02-finalized-corpora/scotus.rda')
   
 }
