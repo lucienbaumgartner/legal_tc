@@ -11,7 +11,7 @@ rm(list=ls())
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 getwd()
 
-search.terms <- read.table('../input/dict.txt', header = T, stringsAsFactors = F, sep=',')
+search.terms <- read.table('../../input/dict.txt', header = T, stringsAsFactors = F, sep=',')
 search.terms <- mutate(search.terms, word = c(paste0('%22', capitalize(search.terms$word), '%20and%22')))
 
 subreddit <- '!legaladvice,!Advice'
@@ -59,7 +59,7 @@ for(m in search.terms$word){
         utc <- na.omit(unique(utc)[1])
         utc <- ifelse(is.null(utc), 'not_spec', utc)
         if(nrow(df)>0){
-          out <- paste0('../output/00-bulk-data/baseline/reddit/raw/', m, '_', utc, '.RDS')
+          out <- paste0('../../output/00-bulk-data/baseline/reddit/raw/', m, '_', utc, '.RDS')
           save(df, file = out)
         }
       }
@@ -68,26 +68,18 @@ for(m in search.terms$word){
 }
 
 
-file_paths <- list.files('../output/00-bulk-data/baseline/reddit/raw/', full.names = T)
+file_paths <- list.files('../../output/00-bulk-data/baseline/reddit/raw/', full.names = T)
 df <- pbmclapply(file_paths, function(x){
   load(x)
   return(df$body)
 }, mc.cores = 4)
-df <- unlist(df)
-save(df, file = paste0('../output/00-bulk-data/baseline/reddit/', 'reddit.RDS'))
-
-file_paths <- list.files('../output/00-bulk-data/baseline/reddit/raw/', full.names = T)
-df <- pbmclapply(file_paths, function(x){
-  load(x)
-  return(df$body)
-}, mc.cores = 4)
-names(df) <- gsub('\\_.*','', list.files(c))
+names(df) <- gsub('\\_.*','', list.files('../../output/00-bulk-data/baseline/reddit/raw/'))
 for(i in unique(names(df))){
   print(i)
   dta <- unlist(df[grepl(i, names(df))])
   if(!is.null(dta)){
     names(dta) <- i
-    save(dta, file = paste0('../output/00-bulk-data/baseline/reddit/raw_aggr/', i, '.RDS'))
+    save(dta, file = paste0('../../output/00-bulk-data/baseline/reddit/raw_aggr/', i, '.RDS'))
   }
 }
 

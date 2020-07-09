@@ -1,14 +1,17 @@
+library(dplyr)
 library(stringr)
 library(spacyr)
 library(gtools)
 library(tokenizers)
+library(pbmcapply)
+library(stringr)
 
 rm(list=ls())
 getwd()
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+#setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
-datasets <- list.files('../output/01-reduced-corpora', full.names = T)
-search.terms <- read.table('../input/dict.txt', header = T, stringsAsFactors = F, sep=',')
+datasets <- list.files('../../output/01-reduced-corpora/baseline/reddit', full.names = T)
+search.terms <- read.table('../../input/dict.txt', header = T, stringsAsFactors = F, sep=',')
 
 for(i in datasets){
   
@@ -73,7 +76,20 @@ for(i in datasets){
   df <- as_tibble(df)
   df <- filter(df, TARGET%in%search.terms$word)
   #table(df$TARGET)
-  out <- paste0('../output/02-finalized-corpora/', gsub('.*\\/', '', i))
-  save(df, file='../output/02-finalized-corpora/scotus.rda')
+  out <- paste0('../../output/02-finalized-corpora/baseline/reddit/', gsub('.*\\/', '', i))
+  save(df, file = out)
   
 }
+
+### generate full corpus
+fileslist <- list.files('../../output/02-finalized-corpora/baseline/reddit', full.names = T)
+reddit <- pbmclapply(fileslist, function(x){
+  load(x)
+  return(df)
+})
+
+reddit <- do.call(rbind, reddit)
+reddit <- as_tibble(reddit)
+reddit <- mutate(reddit, context = 'reddit')
+
+save(reddit, file = '../../output/02-finalized-corpora/baseline/reddit/reddit.RDS', compress = T)

@@ -9,7 +9,7 @@ rm(list=ls())
 getwd()
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
-datasets <- list.dirs('../input/bulk-data', full.names = T)[-1]
+datasets <- list.dirs('../../input/bulk-data', full.names = T)[-1]
 
 for(i in datasets){
   
@@ -69,7 +69,7 @@ for(i in datasets){
   # collapse text list to vec
   if(length(unlist(df$txt)) == nrow(df)) df <- mutate(df, txt=unlist(txt))
   
-  out <- paste0('../output/00-bulk-data/', gsub('.*\\/', '', i), '.RDS')
+  out <- paste0('../../output/00-bulk-data/legal/', gsub('.*\\/', '', i), '.RDS')
   save(df, file = out)
 }
 

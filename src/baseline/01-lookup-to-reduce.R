@@ -1,19 +1,22 @@
+library(dplyr)
 library(stringr)
 library(spacyr)
 library(gtools)
 library(tokenizers)
+library(pbmcapply)
 
 rm(list=ls())
 getwd()
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+#setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
-datasets <- list.files('../output/00-bulk-data', full.names = T)
-search.terms <- read.table('../input/dict.txt', header = T, stringsAsFactors = F, sep=',')
+datasets <- list.files('../../output/00-bulk-data/baseline/reddit/raw_aggr', full.names = T)
+search.terms <- read.table('../../input/dict.txt', header = T, stringsAsFactors = F, sep=',')
 
 for(i in datasets){
   
   #i = datasets[1]
   load(i)
+  df <- tibble(txt=dta)
   .lookup <- paste0(paste0('\\b', search.terms$word, '\\b'), '(\\,)?\\s\\band\\b', collapse = '|')
   corpus <- pbmclapply(df$txt, function(x){
     #print(x)
@@ -34,7 +37,7 @@ for(i in datasets){
   df <- mutate(df, match = as.character(match))
   df <- as_tibble(df)
   # save data
-  out <- paste0('../output/01-reduced-corpora/', gsub('.*\\/', '', i))
-  save(df, file = out)
+  out <- paste0('../../output/01-reduced-corpora/baseline/reddit/', gsub('.*\\/', '', i))
+  save(df, file = out, compress = 'gzip')
   
 }
