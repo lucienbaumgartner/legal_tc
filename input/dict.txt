@@ -1,16 +1,14 @@
 word,cat
 honest,tc
 fair,tc
-careless,tc
 fraudulent,tc
 valid,epistemic
 invalid,epistemic
 reasonable,epistemic
-factual,epistemic
+unreasonable,epistemic
 legal,legal
 illegal,legal
 lawful,legal
 unlawful,legal
-constitutional,legal
 equitable,induction
 adequate,induction

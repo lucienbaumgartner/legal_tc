@@ -7,8 +7,7 @@ library(pbmcapply)
 library(stringr)
 
 rm(list=ls())
-getwd()
-#setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd('~/legal_tc/src/baseline/')
 
 datasets <- list.files('../../output/01-reduced-corpora/baseline/reddit', full.names = T)
 search.terms <- read.table('../../input/dict.txt', header = T, stringsAsFactors = F, sep=',')

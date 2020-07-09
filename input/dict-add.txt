@@ -1,0 +1,4 @@
+word,cat
+inadequate,induction
+inequitable,induction
+dishonest,tc

@@ -6,8 +6,7 @@ library(tokenizers)
 library(pbmcapply)
 
 rm(list=ls())
-getwd()
-#setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd('~/legal_tc/src/baseline/')
 
 datasets <- list.files('../../output/00-bulk-data/baseline/reddit/raw_aggr', full.names = T)
 search.terms <- read.table('../../input/dict.txt', header = T, stringsAsFactors = F, sep=',')

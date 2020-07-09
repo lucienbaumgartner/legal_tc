@@ -1,0 +1,106 @@
+
+R version 3.5.1 (2018-07-02) -- "Feather Spray"
+Copyright (C) 2018 The R Foundation for Statistical Computing
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+
+R ist freie Software und kommt OHNE JEGLICHE GARANTIE.
+Sie sind eingeladen, es unter bestimmten Bedingungen weiter zu verbreiten.
+Tippen Sie 'license()' or 'licence()' für Details dazu.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Tippen Sie 'demo()' für einige Demos, 'help()' für on-line Hilfe, oder
+'help.start()' für eine HTML Browserschnittstelle zur Hilfe.
+Tippen Sie 'q()', um R zu verlassen.
+
+[Vorher gesicherter Workspace wiederhergestellt]
+
+> library(stringr)
+Warnmeldung:
+Paket ‘stringr’ wurde unter R Version 3.5.2 erstellt 
+> library(spacyr)
+Warnmeldung:
+Paket ‘spacyr’ wurde unter R Version 3.5.2 erstellt 
+> library(gtools)
+> library(tokenizers)
+> 
+> rm(list=ls())
+> setwd('~/legal_tc/src/legal/')
+> 
+> datasets <- list.files('../../output/01-reduced-corpora/legal', full.names = T)
+> search.terms <- read.table('../../input/dict.txt', header = T, stringsAsFactors = F, sep=',')
+> 
+> for(i in datasets){
++   
++   #i=datasets[1]
++   load(i)
++   df <- mutate(df, TARGET = strsplit(gsub('\\,', '', match), '\\s'))
++   df <- mutate(df, CCONJ = sapply(TARGET, '[[', 2))
++   df <- mutate(df, TARGET = sapply(TARGET, '[[', 1))
++   df <- mutate(df, comma = grepl('\\,', match))
++   
++   txtparsed <- spacy_parse(tolower(df$corpus), pos = TRUE)
++   txtparsed <- split(txtparsed, txtparsed$doc_id, lex.order = F)
++   txtparsed <- txtparsed[mixedsort(names(txtparsed))]
++   txtparsed <- pbmclapply(txtparsed, function(x) x$lemma %>% setNames(., x$pos), mc.cores = 4)
++   
++   #.lookup <- strsplit(gsub('\\\\b|\\(\\,\\)\\?', '', .lookup), '\\s') %>% unlist
++   txtparsed_adj <- pbmclapply(1:length(txtparsed), function(INDEX){
++     z <- txtparsed[[INDEX]]
++     .lookup <- c(df$TARGET[INDEX], df$CCONJ[INDEX])
++     windex <- grep(.lookup[1], z) # lookup the ADJ
++     # if the word afterwards is the corresponding AND/BUT OR
++     # comma followed by the corresponding AND/BUT
++     windex <- windex[!is.na(z[windex + 2])]
++     if(!any(is.na(windex)|is.null(windex))){
++       if(any( z[windex + 1] == .lookup[2] | (z[windex + 1] == ',' & z[windex + 2] == .lookup[2]) )){
++         tmp <- lapply(windex, function(y, pop=z){
++           p <- ifelse(pop[y + 1] == ',' & pop[y + 2] == .lookup[2], 1, 0)
++           if(y+ 2 +p <length(pop)){
++             
++             if(pop[y + 1 + p] == .lookup[2] & ( names(pop[y + 2 + p]) == 'ADJ' | ( names(pop[y + 2 + p]) == 'ADV' & ifelse('try-error'%in%class(try(names(pop[y + 3 + p]) == 'ADJ')), F, names(pop[y + 3 + p]) == 'ADJ') ) ) ){
++               
++               if(y-1>0){
++                 pop <- pop[(y-1):length(pop)]
++               }else{
++                 pop <- c(NA, pop[y:length(pop)])
++               }
++               pop <- tryCatch({pop[1:grep('ADJ', names(pop))[2]]}, error = function(e) NULL)
++               if(!is.null(pop)){
++                 pop <- tibble(TARGET = pop[2], CCONJ = pop[3 + p], ADV = ifelse(names(pop[4 + p]) == 'ADV', pop[4 + p], NA),
++                               ADJ = ifelse(is.na(ADV), pop[4 + p], pop[5 + p]), modifier = ifelse(names(pop[1]) == 'ADV', pop[1], NA),
++                               comma = p)
++               }
++               return(pop)
++             }
++             
++           }
++         })
++         tmp <- do.call(rbind, tmp)
++         return(tmp)
++       }
++     }
++   }
++   , mc.cores=4)
++   
++   df <- rename(df, comma_check = comma, TARGET_check = TARGET, CCONJ_check = CCONJ)
++   reps <- unlist(lapply(sapply(txtparsed_adj, nrow), function(x) ifelse(is.null(x), 0, x)))
++   df <- df[rep(1:nrow(df), reps),]
++   txtparsed_adj <- do.call(rbind, txtparsed_adj)
++   #txtparsed_adj <- mutate(txtparsed_adj, id=df$id)
++   #txtparsed_adj <- select(txtparsed_adj, -id)
++   df <- cbind(df, txtparsed_adj)
++   df <- as_tibble(df)
++   df <- filter(df, TARGET%in%search.terms$word)
++   #table(df$TARGET)
++   out <- paste0('../../output/02-finalized-corpora/legal/', gsub('.*\\/', '', i))
++   save(df, file=out)
++   
++ }
+Fehler in mutate(df, TARGET = strsplit(gsub("\\,", "", match), "\\s")) : 
+  konnte Funktion "mutate" nicht finden
+Ausführung angehalten
