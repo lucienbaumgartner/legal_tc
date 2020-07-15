@@ -6,8 +6,8 @@ library(pbmcapply)
 library(dplyr)
 
 rm(list=ls())
-getwd()
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd('~/legal_tc/src/legal/')
+#setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 datasets <- list.files('../../output/00-bulk-data/legal', full.names = T)
 search.terms <- read.table('../../input/dict.txt', header = T, stringsAsFactors = F, sep=',')

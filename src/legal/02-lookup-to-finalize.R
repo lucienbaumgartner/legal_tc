@@ -4,8 +4,7 @@ library(gtools)
 library(tokenizers)
 
 rm(list=ls())
-getwd()
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd('~/legal_tc/src/legal/')
 
 datasets <- list.files('../../output/01-reduced-corpora/legal', full.names = T)
 search.terms <- read.table('../../input/dict.txt', header = T, stringsAsFactors = F, sep=',')

@@ -1,0 +1,703 @@
+
+R version 3.5.1 (2018-07-02) -- "Feather Spray"
+Copyright (C) 2018 The R Foundation for Statistical Computing
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+
+R ist freie Software und kommt OHNE JEGLICHE GARANTIE.
+Sie sind eingeladen, es unter bestimmten Bedingungen weiter zu verbreiten.
+Tippen Sie 'license()' or 'licence()' für Details dazu.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Tippen Sie 'demo()' für einige Demos, 'help()' für on-line Hilfe, oder
+'help.start()' für eine HTML Browserschnittstelle zur Hilfe.
+Tippen Sie 'q()', um R zu verlassen.
+
+> library(dplyr)
+
+Attache Paket: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+Warnmeldung:
+Paket ‘dplyr’ wurde unter R Version 3.5.2 erstellt 
+> library(pbmcapply)
+Lade nötiges Paket: parallel
+Lade nötiges Paket: future
+> library(httr)
+Warnmeldung:
+Paket ‘httr’ wurde unter R Version 3.5.2 erstellt 
+> library(lubridate)
+
+Attache Paket: ‘lubridate’
+
+The following object is masked from ‘package:base’:
+
+    date
+
+> library(anytime)
+Warnmeldung:
+Paket ‘anytime’ wurde unter R Version 3.5.2 erstellt 
+> library(stringi)
+Warnmeldung:
+Paket ‘stringi’ wurde unter R Version 3.5.2 erstellt 
+> library(rlist)
+> library(Hmisc)
+Lade nötiges Paket: lattice
+Lade nötiges Paket: survival
+
+Attache Paket: ‘survival’
+
+The following object is masked from ‘package:future’:
+
+    cluster
+
+Lade nötiges Paket: Formula
+Lade nötiges Paket: ggplot2
+
+Attache Paket: ‘Hmisc’
+
+The following objects are masked from ‘package:dplyr’:
+
+    src, summarize
+
+The following objects are masked from ‘package:base’:
+
+    format.pval, units
+
+> rm(list=ls())
+> 
+> setwd('~/legal_tc/src/baseline/')
+> getwd()
+[1] "/Users/lucienbaumgartner/legal_tc/src/baseline"
+> 
+> search.terms <- read.table('../../input/dict-add.txt', header = T, stringsAsFactors = F, sep=',')
+> search.terms <- mutate(search.terms, word = c(paste0('%22', capitalize(search.terms$word), '%20and%22')))
+> 
+> subreddit <- '!legaladvice,!Advice'
+> range_end <- 100
+> 
+> Lurls <- lapply(search.terms$word, function(x){
++   paste0(
++     'https://api.pushshift.io/reddit/search/comment/?q=',
++     x,
++     '&',
++     'subreddit=',
++     subreddit,
++     '&',
++     'after=',
++     (range_end+1):2,
++     'd&before=',
++     range_end:1,
++     'd&sort=dsc&size=1000'
++   )})
+> 
+> names(Lurls) <- search.terms$word
+> 
+> for(m in search.terms$word){
++   urls <- Lurls[[m]]
++   print(m)
++   for(i in urls){
++     print(i)
++     #check <- today()-1-as.numeric(stri_extract_first_regex(i, '[0-9]+'))
++     #check <- paste0(m, '_', check, '.RDS') %in% list.files('../output/raw/and_but/')
++     #if(check) next
++     response <- try(GET(i))
++     if(!'try-error' %in% class(response)){
++       response <- try(content(response))
++       if(!'try-error' %in% class(response)&!identical(response, list())){
++         df <- try(do.call(rbind, response$data) %>% as_tibble)
++         if('try-error' %in% class(df)){
++           selcols <- list.common(lapply(response$data, names))
++           df <- lapply(response$data, function(x) x[selcols])
++           df <- do.call(rbind, df) %>% as_tibble
++         }
++         utc <- unlist(df$created_utc)
++         utc <- as.numeric(utc)
++         utc <- na.omit(utc)
++         utc <- anydate(utc)
++         utc <- na.omit(unique(utc)[1])
++         utc <- ifelse(is.null(utc), 'not_spec', utc)
++         if(nrow(df)>0){
++           out <- paste0('../../output/00-bulk-data/baseline/reddit/raw/', m, '_', utc, '.RDS')
++           save(df, file = out)
++         }
++       }
++     }
++   }
++ }
+[1] "%22Malicious%20and%22"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=101d&before=100d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=100d&before=99d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=99d&before=98d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=98d&before=97d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=97d&before=96d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=96d&before=95d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=95d&before=94d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=94d&before=93d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=93d&before=92d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=92d&before=91d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=91d&before=90d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=90d&before=89d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=89d&before=88d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=88d&before=87d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=87d&before=86d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=86d&before=85d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=85d&before=84d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=84d&before=83d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=83d&before=82d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=82d&before=81d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=81d&before=80d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=80d&before=79d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=79d&before=78d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=78d&before=77d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=77d&before=76d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=76d&before=75d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=75d&before=74d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=74d&before=73d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=73d&before=72d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=72d&before=71d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=71d&before=70d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=70d&before=69d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=69d&before=68d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=68d&before=67d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=67d&before=66d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=66d&before=65d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=65d&before=64d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=64d&before=63d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=63d&before=62d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=62d&before=61d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=61d&before=60d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=60d&before=59d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=59d&before=58d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=58d&before=57d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=57d&before=56d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=56d&before=55d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=55d&before=54d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=54d&before=53d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=53d&before=52d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=52d&before=51d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=51d&before=50d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=50d&before=49d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=49d&before=48d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=48d&before=47d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=47d&before=46d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=46d&before=45d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=45d&before=44d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=44d&before=43d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=43d&before=42d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=42d&before=41d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=41d&before=40d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=40d&before=39d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=39d&before=38d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=38d&before=37d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=37d&before=36d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=36d&before=35d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=35d&before=34d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=34d&before=33d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=33d&before=32d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=32d&before=31d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=31d&before=30d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=30d&before=29d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=29d&before=28d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=28d&before=27d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=27d&before=26d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=26d&before=25d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=25d&before=24d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=24d&before=23d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=23d&before=22d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=22d&before=21d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=21d&before=20d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=20d&before=19d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=19d&before=18d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=18d&before=17d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=17d&before=16d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=16d&before=15d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=15d&before=14d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=14d&before=13d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=13d&before=12d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=12d&before=11d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=11d&before=10d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=10d&before=9d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=9d&before=8d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=8d&before=7d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=7d&before=6d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=6d&before=5d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=5d&before=4d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=4d&before=3d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=3d&before=2d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Malicious%20and%22&subreddit=!legaladvice,!Advice&after=2d&before=1d&sort=dsc&size=1000"
+[1] "%22Unreasonable%20and%22"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=101d&before=100d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=100d&before=99d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=99d&before=98d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=98d&before=97d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=97d&before=96d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=96d&before=95d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=95d&before=94d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=94d&before=93d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=93d&before=92d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=92d&before=91d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=91d&before=90d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=90d&before=89d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=89d&before=88d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=88d&before=87d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=87d&before=86d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=86d&before=85d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=85d&before=84d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=84d&before=83d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=83d&before=82d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=82d&before=81d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=81d&before=80d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=80d&before=79d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=79d&before=78d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=78d&before=77d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=77d&before=76d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=76d&before=75d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=75d&before=74d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=74d&before=73d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=73d&before=72d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=72d&before=71d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=71d&before=70d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=70d&before=69d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=69d&before=68d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=68d&before=67d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=67d&before=66d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=66d&before=65d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=65d&before=64d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=64d&before=63d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=63d&before=62d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=62d&before=61d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=61d&before=60d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=60d&before=59d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=59d&before=58d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=58d&before=57d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=57d&before=56d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=56d&before=55d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=55d&before=54d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=54d&before=53d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=53d&before=52d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=52d&before=51d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=51d&before=50d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=50d&before=49d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=49d&before=48d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=48d&before=47d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=47d&before=46d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=46d&before=45d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=45d&before=44d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=44d&before=43d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=43d&before=42d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=42d&before=41d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=41d&before=40d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=40d&before=39d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=39d&before=38d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=38d&before=37d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=37d&before=36d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=36d&before=35d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=35d&before=34d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=34d&before=33d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=33d&before=32d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=32d&before=31d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=31d&before=30d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=30d&before=29d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=29d&before=28d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=28d&before=27d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=27d&before=26d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=26d&before=25d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=25d&before=24d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=24d&before=23d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=23d&before=22d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=22d&before=21d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=21d&before=20d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=20d&before=19d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=19d&before=18d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=18d&before=17d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=17d&before=16d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=16d&before=15d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=15d&before=14d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=14d&before=13d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=13d&before=12d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=12d&before=11d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=11d&before=10d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=10d&before=9d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=9d&before=8d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=8d&before=7d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=7d&before=6d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=6d&before=5d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=5d&before=4d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=4d&before=3d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=3d&before=2d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Unreasonable%20and%22&subreddit=!legaladvice,!Advice&after=2d&before=1d&sort=dsc&size=1000"
+[1] "%22Insufficient%20and%22"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=101d&before=100d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=100d&before=99d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=99d&before=98d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=98d&before=97d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=97d&before=96d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=96d&before=95d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=95d&before=94d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=94d&before=93d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=93d&before=92d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=92d&before=91d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=91d&before=90d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=90d&before=89d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=89d&before=88d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=88d&before=87d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=87d&before=86d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=86d&before=85d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=85d&before=84d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=84d&before=83d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=83d&before=82d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=82d&before=81d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=81d&before=80d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=80d&before=79d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=79d&before=78d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=78d&before=77d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=77d&before=76d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=76d&before=75d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=75d&before=74d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=74d&before=73d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=73d&before=72d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=72d&before=71d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=71d&before=70d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=70d&before=69d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=69d&before=68d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=68d&before=67d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=67d&before=66d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=66d&before=65d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=65d&before=64d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=64d&before=63d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=63d&before=62d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=62d&before=61d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=61d&before=60d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=60d&before=59d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=59d&before=58d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=58d&before=57d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=57d&before=56d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=56d&before=55d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=55d&before=54d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=54d&before=53d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=53d&before=52d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=52d&before=51d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=51d&before=50d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=50d&before=49d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=49d&before=48d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=48d&before=47d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=47d&before=46d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=46d&before=45d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=45d&before=44d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=44d&before=43d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=43d&before=42d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=42d&before=41d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=41d&before=40d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=40d&before=39d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=39d&before=38d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=38d&before=37d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=37d&before=36d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=36d&before=35d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=35d&before=34d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=34d&before=33d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=33d&before=32d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=32d&before=31d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=31d&before=30d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=30d&before=29d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=29d&before=28d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=28d&before=27d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=27d&before=26d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=26d&before=25d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=25d&before=24d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=24d&before=23d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=23d&before=22d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=22d&before=21d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=21d&before=20d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=20d&before=19d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=19d&before=18d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=18d&before=17d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=17d&before=16d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=16d&before=15d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=15d&before=14d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=14d&before=13d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=13d&before=12d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=12d&before=11d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=11d&before=10d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=10d&before=9d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=9d&before=8d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=8d&before=7d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=7d&before=6d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=6d&before=5d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=5d&before=4d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=4d&before=3d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=3d&before=2d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Insufficient%20and%22&subreddit=!legaladvice,!Advice&after=2d&before=1d&sort=dsc&size=1000"
+[1] "%22Felonious%20and%22"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=101d&before=100d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=100d&before=99d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=99d&before=98d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=98d&before=97d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=97d&before=96d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=96d&before=95d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=95d&before=94d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=94d&before=93d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=93d&before=92d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=92d&before=91d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=91d&before=90d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=90d&before=89d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=89d&before=88d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=88d&before=87d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=87d&before=86d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=86d&before=85d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=85d&before=84d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=84d&before=83d&sort=dsc&size=1000"
+No encoding supplied: defaulting to UTF-8.
+Error in do.call(rbind, response$data) : 
+  das zweite Argument muss eine Liste sein
+Zusätzlich: Es gab 50 oder mehr Warnungen (Anzeige der ersten 50 mit warnings())
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=83d&before=82d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=82d&before=81d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=81d&before=80d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=80d&before=79d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=79d&before=78d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=78d&before=77d&sort=dsc&size=1000"
+No encoding supplied: defaulting to UTF-8.
+Error in do.call(rbind, response$data) : 
+  das zweite Argument muss eine Liste sein
+Zusätzlich: Warnmeldungen:
+1: Unknown or uninitialised column: 'created_utc'. 
+2: Unknown or uninitialised column: 'created_utc'. 
+3: Unknown or uninitialised column: 'created_utc'. 
+4: Unknown or uninitialised column: 'created_utc'. 
+5: Unknown or uninitialised column: 'created_utc'. 
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=77d&before=76d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=76d&before=75d&sort=dsc&size=1000"
+No encoding supplied: defaulting to UTF-8.
+Error in do.call(rbind, response$data) : 
+  das zweite Argument muss eine Liste sein
+Zusätzlich: Warnmeldungen:
+1: Unknown or uninitialised column: 'created_utc'. 
+2: Unknown or uninitialised column: 'created_utc'. 
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=75d&before=74d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=74d&before=73d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=73d&before=72d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=72d&before=71d&sort=dsc&size=1000"
+No encoding supplied: defaulting to UTF-8.
+Error in do.call(rbind, response$data) : 
+  das zweite Argument muss eine Liste sein
+Zusätzlich: Warnmeldungen:
+1: Unknown or uninitialised column: 'created_utc'. 
+2: Unknown or uninitialised column: 'created_utc'. 
+3: Unknown or uninitialised column: 'created_utc'. 
+4: Unknown or uninitialised column: 'created_utc'. 
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=71d&before=70d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=70d&before=69d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=69d&before=68d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=68d&before=67d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=67d&before=66d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=66d&before=65d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=65d&before=64d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=64d&before=63d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=63d&before=62d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=62d&before=61d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=61d&before=60d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=60d&before=59d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=59d&before=58d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=58d&before=57d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=57d&before=56d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=56d&before=55d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=55d&before=54d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=54d&before=53d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=53d&before=52d&sort=dsc&size=1000"
+No encoding supplied: defaulting to UTF-8.
+Error in do.call(rbind, response$data) : 
+  das zweite Argument muss eine Liste sein
+Zusätzlich: Es gab 18 Warnungen (Anzeige mit warnings())
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=52d&before=51d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=51d&before=50d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=50d&before=49d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=49d&before=48d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=48d&before=47d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=47d&before=46d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=46d&before=45d&sort=dsc&size=1000"
+No encoding supplied: defaulting to UTF-8.
+Error in do.call(rbind, response$data) : 
+  das zweite Argument muss eine Liste sein
+Zusätzlich: Warnmeldungen:
+1: Unknown or uninitialised column: 'created_utc'. 
+2: Unknown or uninitialised column: 'created_utc'. 
+3: Unknown or uninitialised column: 'created_utc'. 
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=45d&before=44d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=44d&before=43d&sort=dsc&size=1000"
+No encoding supplied: defaulting to UTF-8.
+Error in do.call(rbind, response$data) : 
+  das zweite Argument muss eine Liste sein
+Zusätzlich: Warnmeldungen:
+1: Unknown or uninitialised column: 'created_utc'. 
+2: Unknown or uninitialised column: 'created_utc'. 
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=43d&before=42d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=42d&before=41d&sort=dsc&size=1000"
+No encoding supplied: defaulting to UTF-8.
+Error in do.call(rbind, response$data) : 
+  das zweite Argument muss eine Liste sein
+Zusätzlich: Warnmeldungen:
+1: Unknown or uninitialised column: 'created_utc'. 
+2: Unknown or uninitialised column: 'created_utc'. 
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=41d&before=40d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=40d&before=39d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=39d&before=38d&sort=dsc&size=1000"
+No encoding supplied: defaulting to UTF-8.
+Error in do.call(rbind, response$data) : 
+  das zweite Argument muss eine Liste sein
+Zusätzlich: Warnmeldungen:
+1: Unknown or uninitialised column: 'created_utc'. 
+2: Unknown or uninitialised column: 'created_utc'. 
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=38d&before=37d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=37d&before=36d&sort=dsc&size=1000"
+No encoding supplied: defaulting to UTF-8.
+Error in do.call(rbind, response$data) : 
+  das zweite Argument muss eine Liste sein
+Zusätzlich: Warnmeldungen:
+1: Unknown or uninitialised column: 'created_utc'. 
+2: Unknown or uninitialised column: 'created_utc'. 
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=36d&before=35d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=35d&before=34d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=34d&before=33d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=33d&before=32d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=32d&before=31d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=31d&before=30d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=30d&before=29d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=29d&before=28d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=28d&before=27d&sort=dsc&size=1000"
+No encoding supplied: defaulting to UTF-8.
+Error in do.call(rbind, response$data) : 
+  das zweite Argument muss eine Liste sein
+Zusätzlich: Warnmeldungen:
+1: Unknown or uninitialised column: 'created_utc'. 
+2: Unknown or uninitialised column: 'created_utc'. 
+3: Unknown or uninitialised column: 'created_utc'. 
+4: Unknown or uninitialised column: 'created_utc'. 
+5: Unknown or uninitialised column: 'created_utc'. 
+6: Unknown or uninitialised column: 'created_utc'. 
+7: Unknown or uninitialised column: 'created_utc'. 
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=27d&before=26d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=26d&before=25d&sort=dsc&size=1000"
+No encoding supplied: defaulting to UTF-8.
+Error in do.call(rbind, response$data) : 
+  das zweite Argument muss eine Liste sein
+Zusätzlich: Warnmeldungen:
+1: Unknown or uninitialised column: 'created_utc'. 
+2: Unknown or uninitialised column: 'created_utc'. 
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=25d&before=24d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=24d&before=23d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=23d&before=22d&sort=dsc&size=1000"
+No encoding supplied: defaulting to UTF-8.
+Error in do.call(rbind, response$data) : 
+  das zweite Argument muss eine Liste sein
+Zusätzlich: Warnmeldungen:
+1: Unknown or uninitialised column: 'created_utc'. 
+2: Unknown or uninitialised column: 'created_utc'. 
+3: Unknown or uninitialised column: 'created_utc'. 
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=22d&before=21d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=21d&before=20d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=20d&before=19d&sort=dsc&size=1000"
+No encoding supplied: defaulting to UTF-8.
+Error in do.call(rbind, response$data) : 
+  das zweite Argument muss eine Liste sein
+Zusätzlich: Warnmeldungen:
+1: Unknown or uninitialised column: 'created_utc'. 
+2: Unknown or uninitialised column: 'created_utc'. 
+3: Unknown or uninitialised column: 'created_utc'. 
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=19d&before=18d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=18d&before=17d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=17d&before=16d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=16d&before=15d&sort=dsc&size=1000"
+No encoding supplied: defaulting to UTF-8.
+Error in do.call(rbind, response$data) : 
+  das zweite Argument muss eine Liste sein
+Zusätzlich: Warnmeldungen:
+1: Unknown or uninitialised column: 'created_utc'. 
+2: Unknown or uninitialised column: 'created_utc'. 
+3: Unknown or uninitialised column: 'created_utc'. 
+4: Unknown or uninitialised column: 'created_utc'. 
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=15d&before=14d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=14d&before=13d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=13d&before=12d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=12d&before=11d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=11d&before=10d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=10d&before=9d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=9d&before=8d&sort=dsc&size=1000"
+No encoding supplied: defaulting to UTF-8.
+Error in do.call(rbind, response$data) : 
+  das zweite Argument muss eine Liste sein
+Zusätzlich: Warnmeldungen:
+1: Unknown or uninitialised column: 'created_utc'. 
+2: Unknown or uninitialised column: 'created_utc'. 
+3: Unknown or uninitialised column: 'created_utc'. 
+4: Unknown or uninitialised column: 'created_utc'. 
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=8d&before=7d&sort=dsc&size=1000"
+No encoding supplied: defaulting to UTF-8.
+Error in do.call(rbind, response$data) : 
+  das zweite Argument muss eine Liste sein
+Zusätzlich: Warnmeldung:
+Unknown or uninitialised column: 'created_utc'. 
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=7d&before=6d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=6d&before=5d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=5d&before=4d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=4d&before=3d&sort=dsc&size=1000"
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=3d&before=2d&sort=dsc&size=1000"
+No encoding supplied: defaulting to UTF-8.
+Error in do.call(rbind, response$data) : 
+  das zweite Argument muss eine Liste sein
+Zusätzlich: Warnmeldungen:
+1: Unknown or uninitialised column: 'created_utc'. 
+2: Unknown or uninitialised column: 'created_utc'. 
+3: Unknown or uninitialised column: 'created_utc'. 
+[1] "https://api.pushshift.io/reddit/search/comment/?q=%22Felonious%20and%22&subreddit=!legaladvice,!Advice&after=2d&before=1d&sort=dsc&size=1000"
+Warnmeldungen:
+1: Unknown or uninitialised column: 'created_utc'. 
+2: Unknown or uninitialised column: 'created_utc'. 
+> 
+> 
+> file_paths <- list.files('../../output/00-bulk-data/baseline/reddit/raw/', full.names = T)
+> df <- pbmclapply(file_paths, function(x){
++   load(x)
++   return(df$body)
++ }, mc.cores = 4)
+> names(df) <- gsub('\\_.*','', list.files('../../output/00-bulk-data/baseline/reddit/raw/'))
+> for(i in unique(names(df))){
++   print(i)
++   dta <- unlist(df[grepl(i, names(df))])
++   if(!is.null(dta)){
++     names(dta) <- i
++     save(dta, file = paste0('../../output/00-bulk-data/baseline/reddit/raw_aggr/', i, '.RDS'))
++   }
++ }
+[1] "%22Adequate%20and%22"
+[1] "%22Equitable%20and%22"
+[1] "%22Fair%20and%22"
+[1] "%22Felonious%20and%22"
+[1] "%22Fraudulent%20and%22"
+[1] "%22Honest%20and%22"
+[1] "%22Illegal%20and%22"
+[1] "%22Insufficient%20and%22"
+[1] "%22Invalid%20and%22"
+[1] "%22Lawful%20and%22"
+[1] "%22Legal%20and%22"
+[1] "%22Malicious%20and%22"
+[1] "%22Reasonable%20and%22"
+[1] "%22Unlawful%20and%22"
+[1] "%22Unreasonable%20and%22"
+[1] "%22Valid%20and%22"
+> 
+> 
+> proc.time()
+       User      System verstrichen 
+     21.369       3.341     473.924 
