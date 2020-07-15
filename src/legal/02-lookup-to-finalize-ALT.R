@@ -1,15 +1,13 @@
-library(dplyr)
 library(stringr)
+library(stringi)
 library(spacyr)
 library(gtools)
 library(tokenizers)
-library(pbmcapply)
-library(stringr)
 
 rm(list=ls())
-setwd('~/legal_tc/src/baseline/')
+setwd('~/legal_tc/src/legal/')
 
-datasets <- list.files('../../output/01-reduced-corpora/baseline/reddit', full.names = T)
+datasets <- list.files('../../output/01-reduced-corpora/legal', full.names = T)
 search.terms <- read.table('../../input/dict.txt', header = T, stringsAsFactors = F, sep=',')
 
 syntax.regex <- '(ADV\\s)?ADJ\\s(PUNCT\\s)?CCONJ\\s(ADV\\s)?ADJ'
@@ -55,10 +53,9 @@ make_regex <- function(INDEX){
       return(dta)
     }
   }), warning = function(e) print(INDEX))
-  if(is.list(tmp)) tmp <- do.call(rbind, tmp)
-  if(is.list(tmp)|is.null(tmp)) return(tmp)
+  tmp <- do.call(rbind, tmp)
+  return(tmp)
 }
-
 
 for(i in datasets){
   
@@ -75,7 +72,6 @@ for(i in datasets){
   txtparsed <- pbmclapply(txtparsed, function(x) x$lemma %>% setNames(., x$pos), mc.cores = 4)
   
   system.time(txtparsed_adj <- pbmclapply(1:length(txtparsed), make_regex, mc.cores=4))
-  #system.time(txtparsed_adj <- lapply(1:length(txtparsed), make_regex))
   
   #df <- rename(df, comma_check = comma, TARGET_check = TARGET, CCONJ_check = CCONJ)
   reps <- unlist(lapply(sapply(txtparsed_adj, nrow), function(x) ifelse(is.null(x), 0, x)))
@@ -88,21 +84,7 @@ for(i in datasets){
   df <- as_tibble(df)
   #table(df$TARGET)
   df <- filter(df, TARGET%in%search.terms$word)
-  #table(df$TARGET)
-  out <- paste0('../../output/02-finalized-corpora/baseline/reddit/', gsub('.*\\/', '', i))
-  save(df, file = out)
+  out <- paste0('../../output/02-finalized-corpora/legal/', gsub('.*\\/', '', i))
+  save(df, file=out)
   
 }
-
-### generate full corpus
-fileslist <- list.files('../../output/02-finalized-corpora/baseline/reddit', full.names = T)
-reddit <- pbmclapply(fileslist, function(x){
-  load(x)
-  return(df)
-})
-
-reddit <- do.call(rbind, reddit)
-reddit <- as_tibble(reddit)
-reddit <- mutate(reddit, context = 'reddit')
-
-save(reddit, file = '../../output/02-finalized-corpora/baseline/reddit/reddit.RDS', compress = T)

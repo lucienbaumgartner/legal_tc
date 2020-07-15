@@ -94,7 +94,7 @@ p <- ggplot(dfx, aes(y=sentiWords, x=context, fill=cat)) +
   geom_boxplot(outlier.shape = NA) + 
   geom_point(data = means, aes(y=sentiWords, colour=cat)) +
   geom_point(data = means, aes(y=sentiWords), shape=1) +
-  facet_grid(~TARGET, scales = 'free_x', drop = T) +
+  facet_grid(first~TARGET, scales = 'free_x', drop = T) +
   #scale_color_manual(values = rev(cols)) +
   #scale_fill_manual(values = rev(cols)) +
   guides(color = FALSE) +
