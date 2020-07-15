@@ -16,7 +16,7 @@ for(i in datasets){
   #i = datasets[1]
   load(i)
   df <- tibble(txt=dta)
-  .lookup <- paste0(paste0('\\b', search.terms$word, '\\b'), '(\\,)?\\s\\band\\b', collapse = '|')
+  .lookup <- paste0(paste0('(\\w+(\\,)?\\s\\band\\b\\s\\b', search.terms$word, '\\b', ')|(\\b', search.terms$word, '\\b'), '(\\,)?\\s\\band\\b\\s\\w+)', collapse = '|')
   corpus <- pbmclapply(df$txt, function(x){
     #print(x)
     tmp <- tokenizers::tokenize_sentences(x)
