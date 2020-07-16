@@ -9,10 +9,11 @@ rm(list=ls())
 getwd()
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
-datasets <- list.dirs('../../input/bulk-data', full.names = T)[-1]
+#datasets <- list.dirs('../../input/bulk-data', full.names = T)[-1]
+datasets <- list.dirs('/Volumes/INTENSO/legal_tc/input/bulk-data/', full.names = T)
 
 for(i in datasets){
-  
+
   # get list of all .json-files of dataset
   files <- list.files(i, full.names = T)
   # run through .json-files and extract the text
@@ -36,7 +37,7 @@ for(i in datasets){
       }else if(ifelse(identical(!df$plain_text=="", logical(0)), F, !df$plain_text=="")){
         df <- df$plain_text
       }
-      
+
       df_try <- try(read_html(df))
       if(!'try-error'%in%class(df_try)){
         df_date <- try(html_text(html_node(df_try, css='.date')))
@@ -68,9 +69,7 @@ for(i in datasets){
   df <- filter(df, !lengths(txt)>1)
   # collapse text list to vec
   if(length(unlist(df$txt)) == nrow(df)) df <- mutate(df, txt=unlist(txt))
-  
-  out <- paste0('../../output/00-bulk-data/legal/', gsub('.*\\/', '', i), '.RDS')
+
+  out <- paste0('/Volumes/INTENSO/legal_tc/output/00-bulk-data/legal/', gsub('.*\\/', '', i), '.RDS')
   save(df, file = out)
 }
-
-
