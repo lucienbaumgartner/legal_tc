@@ -1,5 +1,4 @@
 library(dplyr)
-
 library(jsonlite)
 library(pbmcapply)
 library(rvest)
@@ -65,7 +64,7 @@ transcribe <- function(df){
   }
 }
 
-for(i in datasets[8]){
+for(i in datasets[10:12]){
   print(i)
   if(paste(i, '.RDS') %in% list.files('/Volumes/INTENSO/legal_tc/output/00-bulk-data/legal/')) next
   #i = datasets[2]

@@ -2,6 +2,7 @@ library(quanteda)
 library(ggplot2)
 library(dplyr)
 library(pbmcapply)
+library(pbapply)
 library(lubridate)
 library(viridis)
 #library(ggwordcloud)
@@ -23,16 +24,16 @@ kw <- read.table('../input/dict.txt', stringsAsFactors = F, sep=',', header = T)
 
 ### load reddit data
 load('../output/02-finalized-corpora/baseline/reddit/reddit.RDS')
-reddit <- mutate(reddit, year = 2020)
+reddit <- mutate(reddit, year = 2020, court = 'reddit')
 # available as <reddit>
 
 ### load legal data
 fileslist <- list.files('../output/02-finalized-corpora/legal', full.names = T)
-df <- pbmclapply(fileslist, function(x){
+df <- pblapply(fileslist[-length(fileslist)], function(x){
   load(x)
   df <- mutate(df, context = gsub('\\.RDS|.*\\/', '', x))
   return(df)
-}, mc.cores=4)
+})
 df <- do.call(rbind, df)
 df <- select(df, -id)
 
@@ -41,7 +42,7 @@ df <- rbind(df, reddit)
 rm(reddit)
 df <- as_tibble(df)
 df <- mutate(df, year = as.numeric(year))
-df <- filter(df, year > 1788 & year < 2021)
+df <- filter(df, year > 1979 & year < 2021)
 df <- filter(df, TARGET %in% kw$TARGET)
 
 # load the sentiment dictionary
@@ -60,9 +61,9 @@ nrow(filter(df, TARGET%in%prblm))/nrow(df)
 dfx <- df %>% filter(!TARGET%in%prblm)
 
 prblm <- c('too', 'not', 'less')
-nrow(filter(df, modifier%in%prblm))/nrow(df)
-nrow(filter(df, modifier%in%c('so', 'very', 'really')))/nrow(df)
-dfx <- dfx %>% filter(!modifier%in%prblm)
+nrow(filter(df, TARGET_mod%in%prblm))/nrow(df)
+nrow(filter(df, TARGET_mod%in%c('so', 'very', 'really')))/nrow(df)
+dfx <- dfx %>% filter(!TARGET_mod%in%prblm)
 nrow(filter(df, ADV%in%prblm))/nrow(df)
 dfx <- dfx %>% filter(!ADV%in%prblm)
 prblm <- c('most', 'many', 'more', 'non', 'other', 'last', 'overall', 'much', 'idk', 'holy', 'such')
@@ -75,9 +76,11 @@ dfx <- dfx %>% filter(!is.na(CCONJ)|CCONJ%in%c('and', 'but'))
 # get aggregates
 dfx <- left_join(dfx, kw)
 #rm(sentiWords)
-means <- dfx %>% group_by(TARGET, cat, CCONJ, context) %>% 
-  summarise(sentiWords = mean(sentiWords, na.rm = T))
-dfx <- dfx %>% filter(!(is.na(sentiWords)|is.na(cat)|is.na(CCONJ)))
+dfx <- mutate(dfx, context = ifelse(context == 'reddit', context, 'court'))
+#means <- dfx %>% group_by(TARGET, cat, CCONJ, context) %>% summarise(sentiWords = mean(sentiWords, na.rm = T))
+means <- dfx %>% group_by(TARGET, CCONJ, context) %>% summarise(sentiWords = mean(sentiWords, na.rm = T))
+#dfx <- dfx %>% filter(!(is.na(sentiWords)|is.na(cat)|is.na(CCONJ)))
+dfx <- dfx %>% filter(!(is.na(sentiWords)|is.na(CCONJ)))
 annot <- tokens_lookup(tokens(unique(dfx$TARGET)), dictionary = sentiWords$dichot)
 annot <- tibble(TARGET = unique(dfx$TARGET), TARGET_pol = sapply(annot, function(x) x[1]))
 dfx <- left_join(dfx, annot)
@@ -89,12 +92,14 @@ means <- means %>%
   ungroup %>% 
   mutate(TARGET = factor(TARGET, levels = kw$TARGET))
 
-p <- ggplot(dfx, aes(y=sentiWords, x=context, fill=cat)) + 
+#p <- ggplot(dfx, aes(y=sentiWords, x=context, fill=cat)) + 
+p <- ggplot(dfx, aes(y=sentiWords, x=context, fill=context)) + 
   geom_hline(aes(yintercept=0), lty='dashed') +
   geom_boxplot(outlier.shape = NA) + 
-  geom_point(data = means, aes(y=sentiWords, colour=cat)) +
+  #geom_point(data = means, aes(y=sentiWords, colour=cat)) +
+  geom_point(data = means, aes(y=sentiWords, colour = context)) +
   geom_point(data = means, aes(y=sentiWords), shape=1) +
-  facet_grid(first~TARGET, scales = 'free_x', drop = T) +
+  facet_grid(~TARGET, scales = 'free_x', drop = T) +
   #scale_color_manual(values = rev(cols)) +
   #scale_fill_manual(values = rev(cols)) +
   guides(color = FALSE) +
@@ -104,7 +109,6 @@ p <- ggplot(dfx, aes(y=sentiWords, x=context, fill=cat)) +
                             format(as.character(length(dfx$TARGET[!is.na(dfx$sentiWords)])), big.mark = "'"),
                             ' TARGET ADJ + CCONJ + ADJ constructions from reddit comments and the SCOUTUS corpus (legal). The sample has been drawn randomly via the pushshift API. The boxes represent the quartiles, the whiskers +/-1.5*IQR, the horizontal line the median, and the dots the means.'
     ), width = 130),
-    fill = 'category',
     y = 'sentiWords Score of conjoined adjectives\nfor lemma#pos:#a (adjectives)',
     caption = 
       abbrv(
@@ -161,7 +165,7 @@ p <- ggplot(dfx2,
        ) +
   geom_hline(yintercept = 0, lty = 'dashed') + 
   geom_hline(data = means, aes(yintercept = avg, colour = TARGET)) +
-  geom_point(aes(colour = TARGET), alpha = .2) +
+  #geom_point(aes(colour = TARGET), alpha = .2, shape = '.') +
   geom_smooth(aes(colour = TARGET)) +
   facet_wrap(~TARGET) +
   guides(fill = FALSE, colour = FALSE) +
@@ -170,6 +174,7 @@ p <- ggplot(dfx2,
     title = 'Sentiment over time',
     subtitle = abbrv('Dots and smoothed line are based on legal data. The horizontal lines are the reddit averages from 2020')
   )
+p
 ggsave(p, filename = '../output/03-results/plots/sentiment_over_time.png', width = 11, height = 6)
 
 
