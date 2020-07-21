@@ -38,7 +38,7 @@ This includes:
     - `02-lookup-to-finalize.R`
 - `src/legal/..`:
     - `01-lookup-to-reduce.R`
-    - `~~02-lookup-to-finalize.R~`; updated to: `02-lookup-to-finalize-ALT.R`
+    - `02-lookup-to-finalize.R`; updated to: `02-lookup-to-finalize-ALT.R`
 
 ## Change Reddit Data ex post
 ### Gather new reddit data selectively
