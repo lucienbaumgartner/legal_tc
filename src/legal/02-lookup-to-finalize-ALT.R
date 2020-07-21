@@ -5,13 +5,14 @@ library(gtools)
 library(tokenizers)
 library(dplyr)
 library(reticulate)
+library(pbmcapply)
 
 rm(list=ls())
 setwd('~/legal_tc/src/legal/')
 
-spacy_uninstall()
-spacy_install()
-use_condaenv(condaenv = 'spacy_condaenv', conda = "auto", required = FALSE)
+#spacy_uninstall()
+#spacy_install()
+#use_condaenv(condaenv = 'spacy_condaenv', conda = "auto", required = FALSE)
 spacy_initialize()
 
 datasets <- list.files('../../output/01-reduced-corpora/legal', full.names = T)
@@ -69,6 +70,7 @@ make_regex <- function(INDEX){
 
 for(i in datasets){
   
+  print(i)
   #i=datasets[1]
   load(i)
   df <- mutate(df, TARGET = strsplit(gsub('\\,', '', match), '\\s'))
