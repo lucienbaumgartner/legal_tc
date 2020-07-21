@@ -3,12 +3,20 @@ library(stringi)
 library(spacyr)
 library(gtools)
 library(tokenizers)
+library(dplyr)
+library(reticulate)
 
 rm(list=ls())
 setwd('~/legal_tc/src/legal/')
 
+spacy_uninstall()
+spacy_install()
+use_condaenv(condaenv = 'spacy_condaenv', conda = "auto", required = FALSE)
+spacy_initialize()
+
 datasets <- list.files('../../output/01-reduced-corpora/legal', full.names = T)
-search.terms <- read.table('../../input/dict.txt', header = T, stringsAsFactors = F, sep=',')
+datasets <- datasets[!grepl('scotus', datasets)]
+search.terms <- read.table('../../input/dict-2.txt', header = T, stringsAsFactors = F, sep=',')
 
 syntax.regex <- '(ADV\\s)?ADJ\\s(PUNCT\\s)?CCONJ\\s(ADV\\s)?ADJ'
 make_regex <- function(INDEX){
@@ -59,7 +67,7 @@ make_regex <- function(INDEX){
   }
 }
 
-for(i in datasets[c(11)]){
+for(i in datasets){
   
   #i=datasets[1]
   load(i)

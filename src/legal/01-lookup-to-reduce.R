@@ -15,9 +15,10 @@ getOption('future.globals.maxSize')
 
 #datasets <- list.files('../../output/00-bulk-data/legal', full.names = T)
 datasets <- list.files('/Volumes/INTENSO/legal_tc/output/00-bulk-data/legal', full.names = T)
-search.terms <- read.table('../../input/dict.txt', header = T, stringsAsFactors = F, sep=',')
+datasets <- datasets[!grepl('scotus', datasets)]
+search.terms <- read.table('../../input/dict-2.txt', header = T, stringsAsFactors = F, sep=',')
 
-for(i in datasets[c(11)]){
+for(i in datasets){
   
   #i = datasets[1]
   print(i)
