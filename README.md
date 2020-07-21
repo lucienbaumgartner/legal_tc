@@ -20,7 +20,7 @@ bulk-data:
 
 Those are among the most influential courts in the US. They hand over cases to the US Supreme Court.
 
-![Court of Appeals](https://en.wikipedia.org/wiki/United_States_courts_of_appeals#/media/File:US_Court_of_Appeals_and_District_Court_map.svg)
+![Court of Appeals](/res/img/2560px-US_Court_of_Appeals_and_District_Court_map.svg.png)
 
 ## make corpora
 If you look for new search terms, rerun the respective scripts from prefix 01-.* on for both `src/legal/` and `src/baseline/` or use the respective assembler scripts (BASH) in those folders.
