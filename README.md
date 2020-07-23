@@ -85,12 +85,12 @@ Appeals](res/img/2560px-US_Court_of_Appeals_and_District_Court_map.svg.png)
 
 ![formula](https://render.githubusercontent.com/render/math?math=e\\overline%7By%7D)
 - H5: Based on H1 and H2a & H2b we expect the following effect relations
-to be significant: - H5a: `\overline{|y|}*I(\beta_{epistemic},
-\beta{legal}<\overline{|y|}*I(\beta_{epistemic}, \beta{baseline}` - H5b:
-`\overline{|y|}*I(\beta_{legal},
-\beta{context:legal}<\overline{|y|}*I(\beta_{legal},
-\beta{context:baseline}` - H5c:
-![formula](https://render.githubusercontent.com/render/math?math=\\overline%7B%7Cy%7C%7D*\(\\beta_%7Bmoral%7D*\\beta%7Bcontext:legal%7D\)%3C\\overline%7B%7Cy%7C%7D*\(\\beta_%7Bmoral%7D*\\beta%7Bcontext:baseline%7D\))
+to be significant: - H5a:
+![formula](https://render.githubusercontent.com/render/math?math=\\overline%7B%7Cy%7C%7D*I\(\\beta_%7Bepistemic%7D*\\beta_%7Bcontext:legal%7D\)%3C\\overline%7B%7Cy%7C%7D*I\(\\beta_%7Bepistemic%7D*\\beta_%7Bcontext:baseline%7D\))
+- H5b:
+![formula](https://render.githubusercontent.com/render/math?math=\\overline%7B%7Cy%7C%7D*I\(\\beta_%7Blegal%7D*\\beta_%7Bcontext:legal%7D\)%3C\\overline%7B%7Cy%7C%7D*I\(\\beta_%7Blegal%7D*\\beta_%7Bcontext:baseline%7D\))
+- H5c:
+![formula](https://render.githubusercontent.com/render/math?math=\\overline%7B%7Cy%7C%7D*I\(\\beta_%7Bmoral%7D*\\beta_%7Bcontext:legal%7D\)%3C\\overline%7B%7Cy%7C%7D*I\(\\beta_%7Bmoral%7D*\\beta_%7Bcontext:baseline%7D\))
 
 ## Script Workflow
 

@@ -51,9 +51,9 @@ We focus on a time period from 1980-2020 which encompasses XXX raw documents.
 
 ![formula](https://render.githubusercontent.com/render/math?math=e\overline{y})
 - H5: Based on H1 and H2a & H2b we expect the following effect relations to be significant:
-    - H5a: `\overline{|y|}*I(\beta_{epistemic}, \beta{legal}<\overline{|y|}*I(\beta_{epistemic}, \beta{baseline}`
-    - H5b: `\overline{|y|}*I(\beta_{legal}, \beta{context:legal}<\overline{|y|}*I(\beta_{legal}, \beta{context:baseline}`
-    - H5c: ![formula](https://render.githubusercontent.com/render/math?math=\overline{|y|}*(\beta_{moral}*\beta{context:legal})<\overline{|y|}*(\beta_{moral}*\beta{context:baseline}))
+    - H5a: ![formula](https://render.githubusercontent.com/render/math?math=\overline{|y|}*I(\beta_{epistemic}*\beta_{context:legal})<\overline{|y|}*I(\beta_{epistemic}*\beta_{context:baseline}))
+    - H5b: ![formula](https://render.githubusercontent.com/render/math?math=\overline{|y|}*I(\beta_{legal}*\beta_{context:legal})<\overline{|y|}*I(\beta_{legal}*\beta_{context:baseline}))
+    - H5c: ![formula](https://render.githubusercontent.com/render/math?math=\overline{|y|}*I(\beta_{moral}*\beta_{context:legal})<\overline{|y|}*I(\beta_{moral}*\beta_{context:baseline}))
 
 
 
