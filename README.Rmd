@@ -16,7 +16,8 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## WIP: To Dos
-- [ ] migrate all Court Listener bulk data to external volume
+- [ ] explorative adjective mapping
+- [ ] adapt paths
 
 ## Data
 The data is all bulk data that are processed into two corpora, a legal one and a baseline (= reddit comments). The current baseline might be substituted with another, more traditional corpus later in the process.
@@ -42,20 +43,21 @@ We focus on a time period from 1980-2020 which encompasses XXX raw documents.
 
 ### Within Context Effects
 
-- H2a: The absolute average sentiment of the conjoined adjectives are significantly different for the categories of target adjectives (epistemic, legal, moral) *within the legal context*. We expect the following hierarchy: `\overline{|y|}*\beta_{epistemic}<\overline{|y|}*\beta_{legal}<\overline{|y|}*\beta_{moral}`.
+- H2a: The absolute average sentiment of the conjoined adjectives are significantly different for the categories of target adjectives (epistemic, legal, moral) *within the legal context*. We expect the following hierarchy: ![formula](https://render.githubusercontent.com/render/math?math=\overline{|y|}*\beta_{epistemic}<\overline{|y|}*\beta_{legal}<\overline{|y|}*\beta_{moral}).
 
 - H2b: We expect the same for the baseline.
 
 ### Differences of Within Context Effects Across Contexts
-<img src="https://render.githubusercontent.com/render/math?math=e^{i%20\pi}%20=%20-\overline{1}">
-
-![formula](https://render.githubusercontent.com/render/math?math=e\overline{y})
 - H5: Based on H1 and H2a & H2b we expect the following effect relations to be significant:
     - H5a: ![formula](https://render.githubusercontent.com/render/math?math=\overline{|y|}*I(\beta_{epistemic}*\beta_{context:legal})<\overline{|y|}*I(\beta_{epistemic}*\beta_{context:baseline}))
+    
     - H5b: ![formula](https://render.githubusercontent.com/render/math?math=\overline{|y|}*I(\beta_{legal}*\beta_{context:legal})<\overline{|y|}*I(\beta_{legal}*\beta_{context:baseline}))
+    
     - H5c: ![formula](https://render.githubusercontent.com/render/math?math=\overline{|y|}*I(\beta_{moral}*\beta_{context:legal})<\overline{|y|}*I(\beta_{moral}*\beta_{context:baseline}))
 
 
+### Choose Target Adjectives
+The basis for the analysis is a battery with 10 ex ante specified adjectives. In order to avoid a selection bias we futhermore inductively selected anther 10 adjectives. The inductive approach is based on an analysis of part of speech sequences. For each corpus we drew a random sample of 2000 documents which were subsequently PoS-tagged. Based on the PoS-tags we isolated syntactic structures of the form `(M)*A(,)*C(M)*A`. The conjoined adjectives were then pooled and aggregated across all corpora and aggregated. All adjectives were ranked according to the number of occurences, high variance of conjoined adjectives (highly right-skewed distribution of shares of conjoined adjectives) and mapped on a dissociation dimension (overlap of conjoined adjectives).
 
 ## Script Workflow
 ### Gather Data

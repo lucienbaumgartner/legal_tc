@@ -75,22 +75,22 @@ Appeals](res/img/2560px-US_Court_of_Appeals_and_District_Court_map.svg.png)
     significantly different for the categories of target adjectives
     (epistemic, legal, moral) *within the legal context*. We expect the
     following hierarchy:
-    `\overline{|y|}*\beta_{epistemic}<\overline{|y|}*\beta_{legal}<\overline{|y|}*\beta_{moral}`.
+    ![formula](https://render.githubusercontent.com/render/math?math=\\overline%7B%7Cy%7C%7D*\\beta_%7Bepistemic%7D%3C\\overline%7B%7Cy%7C%7D*\\beta_%7Blegal%7D%3C\\overline%7B%7Cy%7C%7D*\\beta_%7Bmoral%7D).
 
   - H2b: We expect the same for the baseline.
 
 ### Differences of Within Context Effects Across Contexts
 
-<img src="https://render.githubusercontent.com/render/math?math=e^{i%20\pi}%20=%20-\overline{1}">
-
-![formula](https://render.githubusercontent.com/render/math?math=e\\overline%7By%7D)
-- H5: Based on H1 and H2a & H2b we expect the following effect relations
-to be significant: - H5a:
-![formula](https://render.githubusercontent.com/render/math?math=\\overline%7B%7Cy%7C%7D*I\(\\beta_%7Bepistemic%7D*\\beta_%7Bcontext:legal%7D\)%3C\\overline%7B%7Cy%7C%7D*I\(\\beta_%7Bepistemic%7D*\\beta_%7Bcontext:baseline%7D\))
-- H5b:
-![formula](https://render.githubusercontent.com/render/math?math=\\overline%7B%7Cy%7C%7D*I\(\\beta_%7Blegal%7D*\\beta_%7Bcontext:legal%7D\)%3C\\overline%7B%7Cy%7C%7D*I\(\\beta_%7Blegal%7D*\\beta_%7Bcontext:baseline%7D\))
-- H5c:
-![formula](https://render.githubusercontent.com/render/math?math=\\overline%7B%7Cy%7C%7D*I\(\\beta_%7Bmoral%7D*\\beta_%7Bcontext:legal%7D\)%3C\\overline%7B%7Cy%7C%7D*I\(\\beta_%7Bmoral%7D*\\beta_%7Bcontext:baseline%7D\))
+  - H5: Based on H1 and H2a & H2b we expect the following effect
+    relations to be significant:
+      - H5a:
+        ![formula](https://render.githubusercontent.com/render/math?math=\\overline%7B%7Cy%7C%7D*I\(\\beta_%7Bepistemic%7D*\\beta_%7Bcontext:legal%7D\)%3C\\overline%7B%7Cy%7C%7D*I\(\\beta_%7Bepistemic%7D*\\beta_%7Bcontext:baseline%7D\))
+    
+      - H5b:
+        ![formula](https://render.githubusercontent.com/render/math?math=\\overline%7B%7Cy%7C%7D*I\(\\beta_%7Blegal%7D*\\beta_%7Bcontext:legal%7D\)%3C\\overline%7B%7Cy%7C%7D*I\(\\beta_%7Blegal%7D*\\beta_%7Bcontext:baseline%7D\))
+    
+      - H5c:
+        ![formula](https://render.githubusercontent.com/render/math?math=\\overline%7B%7Cy%7C%7D*I\(\\beta_%7Bmoral%7D*\\beta_%7Bcontext:legal%7D\)%3C\\overline%7B%7Cy%7C%7D*I\(\\beta_%7Bmoral%7D*\\beta_%7Bcontext:baseline%7D\))
 
 ## Script Workflow
 
