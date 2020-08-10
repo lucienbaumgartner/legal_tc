@@ -13,6 +13,8 @@ library(ggplot2)
 rm(list = ls())
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
+abbrv <- function(x, width = 200) lapply(strwrap(x, width, simplify = FALSE), paste, collapse="\n")
+
 # load udpipe model
 udmodel <-'/Users/lucienbaumgartner/legal_tc/input/english-ewt-ud-2.4-190531.udpipe'
 udmodel <- udpipe_load_model(udmodel)
@@ -110,16 +112,48 @@ df <- lapply(fileslist, function(x){
 df <- do.call(rbind, df)
 
 aggr <- df %>% group_by(ADJ1, ADJ2) %>% 
-  summarise(n = sum(n), sentiWords = unique(sentiWords)) %>% 
-  mutate(perc = n/sum(n))
+  summarise(n = sum(n), sentiWords = unique(sentiWords)) %>%
+  mutate(perc = n/sum(n),
+         total = sum(n))
 
-vec <- df %>% group_by(ADJ1) %>% summarise(n = sum(n)) %>% top_n(n = 10, wt = n) %>% pull(ADJ1)
+nope <- c(
+  'one', 'two', 'three', 'five', 'four',
+  'fourth', 'second', 'fifth', 'first',
+  'black', 'other', 'eight', 'non', 'eighth',
+  'full'
+)
+vec <- df %>% 
+  filter(! ADJ1 %in% nope) %>% 
+  group_by(ADJ1) %>% summarise(n = sum(n)) %>% 
+  top_n(n = 100, wt = n) %>% pull(ADJ1)
 
 aggr <- aggr %>% ungroup %>% filter(ADJ1 %in% vec)
+.lvl <- unique(aggr[, c('ADJ1', 'total')]) %>% arrange(desc(total))
+aggr <- mutate(aggr, ADJ1 = factor(ADJ1, levels = .lvl$ADJ1))
+yep <- aggr %>% filter(perc > .25) %>% pull(ADJ1) %>% unique
+aggr <- mutate(aggr, var = ifelse(ADJ1 %in% yep, 0, 1))
+yep <- unique(aggr[, c('ADJ1', 'var')])
+p <- ggplot(aggr) +
+  geom_rect(data = yep, aes(fill = factor(var)), xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf, alpha = .4) +
+  geom_point(aes(y = perc, x = sentiWords)) +
+  #geom_rug(aes(y = perc, x = sentiWords), sides="b") +
+  geom_hline(aes(yintercept = .25), colour = 'red') +
+  facet_wrap(~ADJ1) +
+  scale_fill_manual(values = c(NA, '#00BFC4')) +
+  scale_y_continuous(labels = scales::percent) +
+  labs(
+    y = 'Share',
+    fill = 'High Variance',
+    title = abbrv('Overall Sentiment Variance for Most Frequent Adjectives Occuring in AND-Conjuctions'),
+    subtitle = abbrv(paste0('Based on conjunctions occuring in random 2000 document-per-court samples. In total the random sampe consists of ', 
+                            format(nrow(df), big.mark = "'"), 
+                            ' adjective conjunctions.'))
+  ) +
+  theme(
+    plot.title = element_text(face = 'bold')
+  )
 
-ggplot(aggr, aes(y = perc, x = sentiWords, colour = ADJ1)) +
-  geom_point() +
-  facet_wrap(~ADJ1)
+ggsave(p, filename = '../../output/03-results/plots/most-freq-adj.png', width = 15 , height = 10)
 
 ######## benchmarking
 benchmark(

@@ -57,7 +57,11 @@ We focus on a time period from 1980-2020 which encompasses XXX raw documents.
 
 
 ### Choose Target Adjectives
-The basis for the analysis is a battery with 10 ex ante specified adjectives. In order to avoid a selection bias we futhermore inductively selected anther 10 adjectives. The inductive approach is based on an analysis of part of speech sequences. For each corpus we drew a random sample of 2000 documents which were subsequently PoS-tagged. Based on the PoS-tags we isolated syntactic structures of the form `(M)*A(,)*C(M)*A`. The conjoined adjectives were then pooled and aggregated across all corpora and aggregated. All adjectives were ranked according to the number of occurences, high variance of conjoined adjectives (highly right-skewed distribution of shares of conjoined adjectives) and mapped on a dissociation dimension (overlap of conjoined adjectives).
+The basis for the analysis is a battery with 10 ex ante specified adjectives. In order to avoid a selection bias we futhermore inductively selected anther 5 adjectives. The inductive approach is based on an analysis of part of speech sequences. For each corpus we drew a random sample of 2000 documents which were subsequently PoS-tagged. Based on the PoS-tags we isolated syntactic structures of the form `(M)*A(,)*C(M)*A`. The conjoined adjectives were then pooled and aggregated across all corpora. All adjectives were ranked according to the number of occurences, high variance of conjoined adjectives (highly right-skewed distribution of shares of conjoined adjectives) and mapped on a dissociation dimension (overlap of conjoined adjectives).
+
+These are the top 100 adjectives most frequently occuiring in conjunction with another adjective:
+
+![top adjectives](output/03-results/plots/most-freq-adj.png)
 
 ## Script Workflow
 ### Gather Data
