@@ -83,6 +83,12 @@ annot <- tokens_lookup(tokens(unique(dfx$TARGET)), dictionary = sentiWords$dicho
 annot <- tibble(TARGET = unique(dfx$TARGET), TARGET_pol = sapply(annot, function(x) x[1]))
 annot <- annot %>% mutate(TARGET_pol = ifelse(TARGET %in% c('arbitrary', 'illegal'), 'negative', TARGET_pol))
 dfx <- left_join(dfx, annot)
+#nope <- c(
+#  'adequate', 'cruel', 'constitutional',
+#  'arbitrary', 'fair', 'factual',
+#  'unlawful', 'lawful'
+#)
+#dfx <- dfx %>% filter(!TARGET %in% nope)
 means <- dfx %>% group_by(TARGET, CCONJ) %>% summarise(sentiWords = mean(sentiWords, na.rm = T))
 means <- left_join(means, annot)
 
@@ -92,6 +98,11 @@ means <- means %>%
   arrange(TARGET_pol, desc(sentiWords)) %>% 
   mutate(TARGET = factor(TARGET, levels = TARGET))
 dfx <- dfx %>% mutate(TARGET = factor(TARGET, levels=means$TARGET))
+dfx <- mutate(dfx, cat = ifelse(cat == 'epistmic', 'epistemic', cat))
+#.lvls <- dfx %>% arra
+overall_means <- dfx %>% 
+  group_by(cat, TARGET_pol) %>% 
+  summarise(avg = mean(sentiWords, na.rm = T))
 
 #p <- ggplot(dfx, aes(y=sentiWords, x=context, fill=cat)) + 
 p <- ggplot(dfx, aes(y=sentiWords, x=TARGET)) + 
@@ -100,7 +111,8 @@ p <- ggplot(dfx, aes(y=sentiWords, x=TARGET)) +
   #geom_point(data = means, aes(y=sentiWords, colour=cat)) +
   geom_point(data = means, aes(y=sentiWords)) +
   geom_point(data = means, aes(y=sentiWords), shape=1) +
-  facet_grid(~TARGET_pol, scales = 'free_x', drop = T) +
+  geom_hline(data = overall_means, aes(yintercept = avg, colour = cat)) +
+  facet_grid(~ TARGET_pol, scales = 'free_x', drop = T) +
   #scale_color_manual(values = rev(cols)) +
   #scale_fill_manual(values = rev(cols)) +
   guides(color = FALSE) +

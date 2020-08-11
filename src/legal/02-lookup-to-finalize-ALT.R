@@ -1,3 +1,4 @@
+# !diagnostics off
 library(stringr)
 library(stringi)
 library(spacyr)
@@ -15,9 +16,9 @@ setwd('~/legal_tc/src/legal/')
 #use_condaenv(condaenv = 'spacy_condaenv', conda = "auto", required = FALSE)
 spacy_initialize()
 
-datasets <- list.files('../../output/01-reduced-corpora/legal', full.names = T)
+datasets <- list.files('../../output/01-reduced-corpora/legal', full.names = T, pattern = 'new')
 datasets <- datasets[!grepl('scotus', datasets)]
-search.terms <- read.table('../../input/dict-2.txt', header = T, stringsAsFactors = F, sep=',')
+search.terms <- read.table('../../input/dict-add.txt', header = T, stringsAsFactors = F, sep=',')
 
 syntax.regex <- '(ADV\\s)?ADJ\\s(PUNCT\\s)?CCONJ\\s(ADV\\s)?ADJ'
 make_regex <- function(INDEX){
@@ -96,7 +97,7 @@ for(i in datasets){
   df <- as_tibble(df)
   #table(df$TARGET)
   df <- filter(df, TARGET%in%search.terms$word)
-  out <- paste0('../../output/02-finalized-corpora/legal/', gsub('.*\\/', '', i))
+  out <- paste0('../../output/02-finalized-corpora/legal/new-', gsub('.*\\/', '', i))
   save(df, file=out)
   rm(list = c('df', 'txtparsed', 'txtparsed_adj'))
   

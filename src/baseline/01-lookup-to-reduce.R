@@ -8,8 +8,8 @@ library(pbmcapply)
 rm(list=ls())
 setwd('~/legal_tc/src/baseline/')
 
-datasets <- list.files('../../output/00-bulk-data/baseline/reddit/raw_aggr', full.names = T)
-search.terms <- read.table('../../input/dict.txt', header = T, stringsAsFactors = F, sep=',')
+datasets <- list.files('../../output/00-bulk-data/baseline/reddit/raw_aggr', full.names = T, pattern = '\\%22')
+search.terms <- read.table('../../input/dict-add.txt', header = T, stringsAsFactors = F, sep=',')
 
 for(i in datasets){
   
@@ -36,7 +36,7 @@ for(i in datasets){
   df <- mutate(df, match = as.character(match))
   df <- as_tibble(df)
   # save data
-  out <- paste0('../../output/01-reduced-corpora/baseline/reddit/', gsub('.*\\/', '', i))
+  out <- paste0('../../output/01-reduced-corpora/baseline/reddit/new-', gsub('.*\\/', '', i))
   save(df, file = out, compress = 'gzip')
   
 }

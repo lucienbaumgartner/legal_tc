@@ -16,7 +16,7 @@ getOption('future.globals.maxSize')
 #datasets <- list.files('../../output/00-bulk-data/legal', full.names = T)
 datasets <- list.files('/Volumes/INTENSO/legal_tc/output/00-bulk-data/legal', full.names = T)
 datasets <- datasets[!grepl('scotus', datasets)]
-search.terms <- read.table('../../input/dict-2.txt', header = T, stringsAsFactors = F, sep=',')
+search.terms <- read.table('../../input/dict-add.txt', header = T, stringsAsFactors = F, sep=',')
 
 for(i in datasets){
   
@@ -26,6 +26,9 @@ for(i in datasets){
   .lookup <- paste0(paste0('(\\w+(\\,)?\\s\\band\\b\\s\\b', search.terms$word, '\\b', ')|(\\b', search.terms$word, '\\b'), '(\\,)?\\s\\band\\b\\s\\w+)', collapse = '|')
   df <- mutate(df, year = as.numeric(year))
   df <- filter(df, year > 1979)
+  
+  set.seed(12345)
+  df <- df %>% ungroup %>% sample_frac(.6)
   
   if(object.size(df) > 1000*1024^2){
     print('splitting corpus')
@@ -67,7 +70,7 @@ for(i in datasets){
   df <- as_tibble(df)
   #df
   # save data
-  out <- paste0('../../output/01-reduced-corpora/legal/', gsub('.*\\/', '', i))
+  out <- paste0('../../output/01-reduced-corpora/legal/new-', gsub('.*\\/', '', i))
   save(df, file = out)
   rm(df)
   rm(reg_matches)

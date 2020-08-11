@@ -15,7 +15,7 @@ search.terms <- read.table('../../input/dict-add.txt', header = T, stringsAsFact
 search.terms <- mutate(search.terms, word = c(paste0('%22', capitalize(search.terms$word), '%20and%22')))
 
 subreddit <- '!legaladvice,!Advice'
-range_end <- 100
+range_end <- 200
 
 Lurls <- lapply(search.terms$word, function(x){
   paste0(

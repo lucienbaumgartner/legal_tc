@@ -1,18 +1,13 @@
 library(quanteda)
 library(ggplot2)
 library(dplyr)
-library(pbmcapply)
-library(pbapply)
-library(lubridate)
-library(viridis)
-#library(ggwordcloud)
-library(car)
-#library(nortest)
-#library(fastDummies)
 library(pbapply)
 library(tm)
 library(scales)
 library(ggrepel)
+library(gridExtra)
+library(lawstat)
+library(emmeans)
 
 rm(list=ls())
 
@@ -21,15 +16,15 @@ getwd()
 
 # function for linebreaks in plots
 abbrv <- function(x, width = 200) lapply(strwrap(x, width, simplify = FALSE), paste, collapse="\n")
-kw <- read.table('../input/dict.txt', stringsAsFactors = F, sep=',', header = T) %>% rename(TARGET = word)
+kw <- read.table('../input/dict-add.txt', stringsAsFactors = F, sep=',', header = T) %>% rename(TARGET = word)
 
 ### load reddit data
-load('../output/02-finalized-corpora/baseline/reddit/reddit.RDS')
+load('../output/02-finalized-corpora/baseline/reddit/new-reddit.RDS')
 reddit <- mutate(reddit, year = 2020, court = 'reddit')
 # available as <reddit>
 
 ### load legal data
-fileslist <- list.files('../output/02-finalized-corpora/legal', full.names = T)
+fileslist <- list.files('../output/02-finalized-corpora/legal', full.names = T, pattern = 'new')
 df <- pblapply(fileslist[-length(fileslist)], function(x){
   load(x)
   df <- mutate(df, context = gsub('\\.RDS|.*\\/', '', x))
@@ -59,10 +54,6 @@ df$sentiWords <- annot
 rm(annot)
 
 # data treatment
-#prblm <- c('carefree', 'dishonest', 'dishonesty', 'impermanent', 'louder', 'rudeness', 'rudest', 'stupidity', 'stupidly', 'uncruel', 'unfair', 'unfriendly', 'unfunny', 'honesty', 'crude', 'selfishness', 'unselfish', 'asocial', 'antisocial', 'unsafe', 'unreasonable', 'irresponsible')
-#nrow(filter(df, TARGET%in%prblm))/nrow(df)
-#dfx <- df %>% filter(!TARGET%in%prblm)
-
 dfx <- df
 
 prblm <- c('too', 'not', 'less')
@@ -89,6 +80,11 @@ means <- dfx %>% group_by(TARGET, CCONJ, context) %>% summarise(sentiWords = mea
 dfx <- dfx %>% filter(!(is.na(sentiWords)|is.na(CCONJ)))
 annot <- tokens_lookup(tokens(unique(dfx$TARGET)), dictionary = sentiWords$dichot)
 annot <- tibble(TARGET = unique(dfx$TARGET), TARGET_pol = sapply(annot, function(x) x[1]))
+annot <- mutate(annot, TARGET_pol = case_when(
+  TARGET == 'appropriate' ~ 'positive',
+  TARGET == 'illegal' ~ 'negative',
+  !TARGET %in% c('appropriate', 'illegal') ~ TARGET_pol
+)) 
 dfx <- left_join(dfx, annot)
 means <- left_join(means, annot)
 dfx <- dfx %>% 
@@ -107,7 +103,7 @@ p <- ggplot(dfx, aes(y=sentiWords, x=context, fill=context)) +
   #geom_point(data = means, aes(y=sentiWords, colour=cat)) +
   geom_point(data = means, aes(y=sentiWords, colour = context)) +
   geom_point(data = means, aes(y=sentiWords), shape=1) +
-  facet_grid(~TARGET, scales = 'free_x', drop = T) +
+  facet_grid(TARGET_pol ~ cat, scales = 'free_x', drop = T) +
   #scale_color_manual(values = rev(cols)) +
   #scale_fill_manual(values = rev(cols)) +
   guides(color = FALSE) +
@@ -137,7 +133,136 @@ p <- ggplot(dfx, aes(y=sentiWords, x=context, fill=context)) +
     axis.text.x = element_text(angle = 45, hjust = 1)
   )
 p
-ggsave(p, filename = '../output/03-results/plots/overview.png', width = 11, height = 6)
+ggsave(p, filename = '../output/03-results/plots/new-overview.png', width = 11, height = 6)
+
+dfx <- dfx %>% mutate(context = factor(context, levels = c('court', 'reddit')))
+
+###### H1
+means <- dfx %>% group_by(context) %>% summarise(sentiWords = mean(abs(sentiWords), na.rm = T))
+
+p1 <- ggplot(dfx, aes(y=abs(sentiWords), x=context)) + 
+  geom_hline(aes(yintercept=0), lty='dashed') +
+  geom_boxplot(outlier.shape = NA) + 
+  geom_point(data = means, aes(y=sentiWords)) +
+  geom_point(data = means, aes(y=sentiWords), shape=1) +
+  theme(
+    plot.title = element_text(face= 'bold'),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  ) +
+  labs(
+    y = 'Absolute sentiWords Score',
+    title = abbrv('Absolute Sentiment Distribution by Context', width = 40)
+  )
+p1
+ggsave(p1, filename = '../output/03-results/plots/new-h1.png', width = 11, height = 6)
+
+levene.test(abs(dfx$sentiWords), dfx$context, location = 'mean', trim.alpha=0.25, correction.method = 'correction.factor')
+set.seed(12345)
+shapiro.test(dfx %>% sample_n(size = 5000) %>% pull(sentiWords) %>% abs)
+
+m1 <- lm(abs(sentiWords) ~ context, data = dfx)
+anova(m1)
+emm1 <-  emmeans(m1, specs = pairwise ~ context, at = list(.group = c("reddit", "legal")))
+emm1
+emm1 <- pwpp(emm1$emmeans, method = "trt.vs.ctrl1", type = "response", side = ">")
+emm1$data
+
+pwil <- pairwise.wilcox.test(abs(dfx$sentiWords), dfx$context, alternative = 'greater')
+
+#### H1a / H1b
+means <- dfx %>% group_by(context, TARGET_pol) %>% summarise(sentiWords = mean(sentiWords, na.rm = T))
+
+p2 <- ggplot(dfx, aes(y=sentiWords, x=context)) + 
+  geom_hline(aes(yintercept=0), lty='dashed') +
+  geom_boxplot(outlier.shape = NA) + 
+  geom_point(data = means, aes(y=sentiWords)) +
+  geom_point(data = means, aes(y=sentiWords), shape=1) +
+  facet_grid(~ TARGET_pol) +
+  theme(
+    plot.title = element_text(face= 'bold'),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  ) +
+  labs(
+    y = 'sentiWords Score',
+    title = 'Sentiment Distribution by Context and Target Adjective Polarity'
+  )
+p2
+
+ggsave(p2, filename = '../output/03-results/plots/new-h1a_h1b.png', width = 11, height = 6)
+
+p <- grid.arrange(p1,p2, nrow = 1, widths = c(1,2))
+ggsave(p, filename = '../output/03-results/plots/new-h1_overview.png', width = 11, height = 6)
+
+m2 <- lm(sentiWords ~ context * TARGET_pol, data = dfx)
+anova(m2)
+emm2 <- emmeans(m2, specs = pairwise ~ context | TARGET_pol, at = list(.group = c("reddit", "legal")), by = 'TARGET_pol')
+emm2
+# H1a
+emm2 <- pwpp(emm2$emmeans, method = "trt.vs.ctrl1", type = "response", side = ">")
+emm2$data
+# H1b
+emm2 <- pwpp(emm2$emmeans, method = "trt.vs.ctrl1", type = "response", side = "<")
+emm2$data
+
+
+pwil <- pairwise.wilcox.test(abs(dfx$sentiWords), dfx$context, alternative = 'greater')
+
+
+####### H2a & H2b
+means <- dfx %>% group_by(cat, context) %>% summarise(sentiWords = mean(abs(sentiWords), na.rm = T))
+
+p <- ggplot(dfx, aes(y=abs(sentiWords), x=cat)) + 
+  geom_hline(aes(yintercept=0), lty='dashed') +
+  geom_boxplot(outlier.shape = NA) + 
+  geom_point(data = means, aes(y=sentiWords)) +
+  geom_point(data = means, aes(y=sentiWords), shape=1) +
+  facet_grid(~ context, scales = 'free_x', drop = T) +
+  guides(color = FALSE) +
+  theme(
+    plot.title = element_text(face= 'bold'),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  ) +
+  labs(
+    y = 'Absolute sentiWords Score',
+    x = 'Category',
+    title = abbrv('Absolute Sentiment Distribution by Categories within Context (H2a/H2b)', width = 70)
+  ) 
+p
+ggsave(p, filename = '../output/03-results/plots/new-H2a_H2b.png', width = 11, height = 6)
+
+m3 <- lm(abs(sentiWords) ~ context * cat, data = dfx)
+emm3 <- emmeans(m3, specs = pairwise ~ cat, at = list(.group = c("reddit", "legal")), by = 'context')
+emm3
+
+###### H3a / H3b / H3c
+m4 <- lm(abs(sentiWords) ~ context * cat, data = dfx)
+emm4 <- emmeans(m4, specs = pairwise ~ context, at = list(.group = c("reddit", "legal")), by = 'cat')
+emm4
+temp <- as.data.frame(emm4$emmeans)
+
+temp2 <- pwpp(emm4$emmeans, method = "trt.vs.ctrl1", type = "response", side = ">")
+temp2$data
+temp2 <- as.data.frame(temp2$data)
+
+p1 <- ggplot(temp, aes(x = cat, ymin = lower.CL, ymax = upper.CL, y = emmean, group = context, color = context)) +
+  geom_errorbar() +
+  geom_point() +
+  geom_path() +
+  labs(
+    y = 'Estimated Means\n(Absolute sentiWords Score)',
+    x = 'Category',
+    colour = 'Context',
+    title = abbrv('Estimated Means of Absolute Sentiment Distribution by Categories Between Context (H3a/H3b/H3c)', width = 40)
+  ) +
+  theme(
+    plot.title = element_text(face= 'bold'),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+p1
+ggsave(p1, filename = '../output/03-results/plots/new-H3a_H3b_H3c-ESTIMATED.png', width = 11, height = 6)
+
+p2 <- grid.arrange(p, p1, widths = c(1.5,1))
+ggsave(p2, filename = '../output/03-results/plots/new-H3a_H3b_H3c-EST-DISTR.png', width = 11, height = 6)
 
 
 ### have a look at distrubution of adjectives

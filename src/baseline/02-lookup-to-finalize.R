@@ -9,8 +9,8 @@ library(stringr)
 rm(list=ls())
 setwd('~/legal_tc/src/baseline/')
 
-datasets <- list.files('../../output/01-reduced-corpora/baseline/reddit', full.names = T)
-search.terms <- read.table('../../input/dict.txt', header = T, stringsAsFactors = F, sep=',')
+datasets <- list.files('../../output/01-reduced-corpora/baseline/reddit', full.names = T, pattern = 'new')
+search.terms <- read.table('../../input/dict-add.txt', header = T, stringsAsFactors = F, sep=',')
 
 syntax.regex <- '(ADV\\s)?ADJ\\s(PUNCT\\s)?CCONJ\\s(ADV\\s)?ADJ'
 make_regex <- function(INDEX){
@@ -64,6 +64,7 @@ for(i in datasets){
   
   #i=datasets[1]
   load(i)
+  print(i)
   df <- mutate(df, TARGET = strsplit(gsub('\\,', '', match), '\\s'))
   df <- mutate(df, CCONJ = sapply(TARGET, function(x) return(x[x %in% c('and', 'or')][1])))
   df <- mutate(df, TARGET = sapply(TARGET, function(x) return(x[x %in% search.terms$word][1])))
@@ -89,13 +90,13 @@ for(i in datasets){
   #table(df$TARGET)
   df <- filter(df, TARGET%in%search.terms$word)
   #table(df$TARGET)
-  out <- paste0('../../output/02-finalized-corpora/baseline/reddit/', gsub('.*\\/', '', i))
+  out <- paste0('../../output/02-finalized-corpora/baseline/reddit/new-', gsub('.*\\/', '', i))
   save(df, file = out)
   
 }
 
 ### generate full corpus
-fileslist <- list.files('../../output/02-finalized-corpora/baseline/reddit', full.names = T)
+fileslist <- list.files('../../output/02-finalized-corpora/baseline/reddit', full.names = T, pattern = 'new\\-')
 reddit <- pbmclapply(fileslist, function(x){
   load(x)
   return(df)
@@ -105,4 +106,4 @@ reddit <- do.call(rbind, reddit)
 reddit <- as_tibble(reddit)
 reddit <- mutate(reddit, context = 'reddit')
 
-save(reddit, file = '../../output/02-finalized-corpora/baseline/reddit/reddit.RDS', compress = T)
+save(reddit, file = '../../output/02-finalized-corpora/baseline/reddit/new-reddit.RDS', compress = T)
