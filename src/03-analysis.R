@@ -265,6 +265,44 @@ p2 <- grid.arrange(p, p1, widths = c(1.5,1))
 ggsave(p2, filename = '../output/03-results/plots/new-H3a_H3b_H3c-EST-DISTR.png', width = 11, height = 6)
 
 
+#### adj distribution
+means <- dfx %>% group_by(context, TARGET_pol, cat, TARGET) %>% summarise(avg = mean(sentiWords, na.rm = T))
+means_overall <- dfx %>% group_by(context, TARGET_pol, cat) %>% summarise(avg = mean(sentiWords, na.rm = T))
+p1 <- ggplot(dfx %>% filter(TARGET_pol == 'negative'), aes(x = TARGET, y = sentiWords, fill = context)) +
+  geom_boxplot(outlier.color = NA) +
+  geom_point(data = means %>% filter(TARGET_pol == 'negative'), aes(y = avg, color = context)) +
+  geom_point(data = means %>% filter(TARGET_pol == 'negative'), aes(y = avg), shape = 1) +
+  geom_hline(data = means_overall  %>% filter(TARGET_pol == 'negative'), aes(yintercept = avg, colour = context)) +
+  geom_hline(aes(yintercept = 0), lty = 'dashed') +
+  facet_grid(~ cat, scales = 'free_x') +
+  labs(
+    x = 'Target Adjective',
+    title = abbrv(paste0('Negative Concepts'), width = 40)
+  ) +
+  theme(
+    plot.title = element_text(face= 'bold'),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+p2 <- ggplot(dfx %>% filter(TARGET_pol == 'positive'), aes(x = TARGET, y = sentiWords, fill = context)) +
+  geom_boxplot(outlier.color = NA) +
+  geom_point(data = means %>% filter(TARGET_pol == 'positive'), aes(y = avg, color = context)) +
+  geom_point(data = means %>% filter(TARGET_pol == 'positive'), aes(y = avg), shape = 1) +
+  geom_hline(data = means_overall  %>% filter(TARGET_pol == 'positive'), aes(yintercept = avg, colour = context)) +
+  geom_hline(aes(yintercept = 0), lty = 'dashed') +
+  facet_grid(~ cat, scales = 'free_x') +
+  labs(
+    x = 'Target Adjective',
+    title = abbrv(paste0('Positive Concepts'), width = 40)
+  ) +
+  theme(
+    plot.title = element_text(face= 'bold'),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+p <- grid.arrange(p2, p1, nrow = 2)
+ggsave(p, filename = '../output/03-results/plots/new-adj-distr.png', width = 11, height = 8)
+
+
+
 ### have a look at distrubution of adjectives
 aggr <- dfx %>% 
   filter(context == 'court') %>% 

@@ -8,12 +8,13 @@ Lucien Baumgartner
       - [Analysis](#analysis)
       - [Scripts](#scripts)
   - [Data](#data)
+      - [Target Adjectives](#target-adjectives)
   - [Hypotheses](#hypotheses)
       - [Global Context Effects](#global-context-effects)
       - [Within Context Effects](#within-context-effects)
       - [Differences of Within Context Effects Across
         Contexts](#differences-of-within-context-effects-across-contexts)
-      - [Choose Target Adjectives](#choose-target-adjectives)
+  - [Methods](#methods)
   - [Results](#results)
       - [H1 / H1a / H1b](#h1-h1a-h1b)
       - [H2a / H2b](#h2a-h2b)
@@ -38,23 +39,24 @@ Lucien Baumgartner
 
 ### Analysis
 
-  - [ ] Graphical pre-analysis
-  - [ ] test ANOVA-assumptions
-  - [ ] parametric/non-parametric analysis
-      - [ ] H1
-      - [ ] H1a
-      - [ ] H1b
-      - [ ] H2a
-      - [ ] H2b
-      - [ ] H3
-      - [ ] H3a
-      - [ ] H3b
-      - [ ] H3c
+  - [x] Graphical pre-analysis
+  - [x] test ANOVA-assumptions: **violated**
+  - [x] ~~parametric~~/non-parametric analysis
+      - [x] H1
+      - [x] H1a
+      - [x] H1b
+      - [x] H2a
+      - [x] H2b
+      - [x] H3
+      - [x] H3a
+      - [x] H3b
+      - [x] H3c
 
 ### Scripts
 
   - [x] adapt paths
-  - [ ] write statistical analysis scripts
+  - [x] write statistical analysis
+  - [ ] write post analysis
 
 ## Data
 
@@ -82,6 +84,74 @@ document per court.**
 
 ![Court of
 Appeals](res/img/2560px-US_Court_of_Appeals_and_District_Court_map.svg.png)
+
+### Target Adjectives
+
+The basis for the analysis was a battery of ex ante specified
+adjectives. In order to avoid a selection bias we futhermore inductively
+selected antother battery of adjectives. The inductive approach is based
+on an analysis of part of speech sequences. For each corpus we drew a
+random sample of 2000 documents which were subsequently PoS-tagged.
+Based on the PoS-tags we isolated syntactic structures of the form
+`(M)*A(,)*C(M)*A` (M = modifier, A = adjective, C = conjunction, (..) =
+optional part). The conjoined adjectives were then pooled and aggregated
+across all corpora. Only AND-conjunctions were retained. All adjectives
+were ranked according to the number of occurences, high variance of
+conjoined adjectives (highly right-skewed distribution of shares of
+conjoined adjectives) and mapped on a dissociation dimension (overlap of
+conjoined adjectives). We then manually selected adjectives matching our
+adjective categories and added antonyms.
+
+These are the top 100 adjectives most frequently occuring in an
+AND-conjunction with another adjective:
+
+![top adjectives](output/03-results/plots/most-freq-adj.png)
+
+The green facets qualify as adjectives with enough variance in adjective
+cooccurence.
+
+The final adjective list, as for now, is:
+
+    word,cat
+    honest,tc
+    dishonest,tc
+    fair,tc
+    unfair,tc
+    deceptive,tc
+    truthful,tc
+    careful,tc
+    careless,tc
+    proper,tc
+    improper,tc
+    valid,epistemic
+    invalid,epistemic
+    accurate,epistemic
+    inaccurate,epistemic
+    logical,epistemic
+    illogical,epistemic
+    consistent,epistemic
+    inconsistent,epistemic
+    appropriate,epistemic
+    inappropriate,epistemic
+    reasonable,epistemic
+    unreasonable,epistemic
+    legal,legal
+    illegal,legal
+    lawful,legal
+    unlawful,legal
+    constitutional,legal
+    unconstitutional,legal
+    legitimate,legal
+    illegitimate,legal
+    just,legal
+    unjust,legal
+
+The results for the adjectives are as follows:
+
+![adj](output/03-results/plots/new-adj-distr.png)
+
+Note that <unconstitutional> is missing because there was a typo in the
+data gather process, I will have to rerun this item.
 
 ## Hypotheses
 
@@ -123,32 +193,37 @@ Appeals](res/img/2560px-US_Court_of_Appeals_and_District_Court_map.svg.png)
       - H3c:
         ![formula](https://render.githubusercontent.com/render/math?math=\\overline%7B%7Cy%7C%7D*I\(\\beta_%7Bmoral%7D*\\beta_%7Bcontext:legal%7D\)%3C\\overline%7B%7Cy%7C%7D*I\(\\beta_%7Bmoral%7D*\\beta_%7Bcontext:baseline%7D\))
 
-### Choose Target Adjectives
+## Methods
 
-The basis for the analysis is a battery with 10 ex ante specified
-adjectives. In order to avoid a selection bias we futhermore inductively
-selected anther 5 adjectives. The inductive approach is based on an
-analysis of part of speech sequences. For each corpus we drew a random
-sample of 2000 documents which were subsequently PoS-tagged. Based on
-the PoS-tags we isolated syntactic structures of the form
-`(M)*A(,)*C(M)*A`. The conjoined adjectives were then pooled and
-aggregated across all corpora. All adjectives were ranked according to
-the number of occurences, high variance of conjoined adjectives (highly
-right-skewed distribution of shares of conjoined adjectives) and mapped
-on a dissociation dimension (overlap of conjoined adjectives).
+ANOVA-assumptions were not met, but I tested non-parametric models
+against parametric models and they yield similar results. Since we work
+with interaction effects, non-parametric models need more intensive post
+treatment than parametric ones. To keep things simple, **I only computed
+linear models, for now**. We can expect very similar results for the
+non-parametric follow-up contrasts, however.
 
-These are the top 100 adjectives most frequently occuiring in
-conjunction with another adjective:
-
-![top adjectives](output/03-results/plots/most-freq-adj.png)
+Each hypothesis was tested with estimated marginal means (EMMs) for the
+linear models specified above.
 
 ## Results
+
+**tldr; H1/H1a/H1b cannot be rejected. H2a/H2b have to be rejected
+(legal concepts have lower averages than epistemic, not higher).
+H3/H3a/H3b/H3c cannot be rejected.**
 
 ### H1 / H1a / H1b
 
 ![H1](output/03-results/plots/new-h1_overview.png)
 
-**H1**:
+**H1**: To assess the general group differences without including
+dependence on target polarity (pos/neg), we use the absolute sentiment
+values. As you can see in the left hand side of the plot above, the
+distributions suggest a difference between the contexts, on average. The
+one-sided planned contrast for `reddit > court` (= alternative
+hypothesis) is indeed significant, so that we can reject the null
+hypothesis in support of the alternative hypothesis. Consequently, we
+cannot reject H1. The court data shows indeed smaller sentiment values
+for conjoined adjectives, on average, than the reddit data.
 
 ``` 
  context emmean        SE     df lower.CL upper.CL
@@ -176,6 +251,16 @@ P values are right-tailed
 
 **H1a**:
 
+In order to assess the group averages for the context (court/reddit)
+dependent on target polarity (pos/neg), we use a linear model on the
+distributions shown on the right hand side in plot above. For the
+positive target adjectives (H1a) we have a mean of .186 for court data
+and .269 for reddit data. The one-tailed test for the difference between
+the averages (.0829) is significant on .01-alpha level. Consequently, we
+reject the null hypothesis in favour of the alzernative hypothesis,
+i.e. that court data has smaller sentiment values for positive
+adjectives, on average, than reddit data.
+
     $emmeans
     TARGET_pol = negative:
      context emmean      SE     df lower.CL upper.CL
@@ -198,16 +283,38 @@ P values are right-tailed
 
 **H1b**:
 
+The same test as above also reveals that the differences on average
+between the contexts are significant for the negative target adjectives
+as well. We expected, for the negative target adjectives, the court data
+to have smaller sentiment values on average than the reddit data. The
+test resukts below do indeed support this hypothesis.
+
     TARGET_pol = negative:
      contrast       estimate      SE     df t.ratio p.value plus   minus  midpt
      reddit - court  -0.0945 0.00260 173967 -36.294 <.0001  reddit court    1.5
      reddit - court  -0.0945 0.00260 173967 -36.294 <.0001  court  reddit   1.5
+     
+     P values are right-tailed 
 
 ### H2a / H2b
 
 ![H2\_H3](output/03-results/plots/new-H3a_H3b_H3c-EST-DISTR.png)
 
-**H2a**:
+On the left hand side of this plot we see the distributions of absolute
+sentiment values dependent on context and target adjective categories.
+These are the distributions specified by the model formula (not
+simulated values) for H2a/H2b. On the right hand side, we see the
+estimated means for the categories that were used in the three
+consecutive one-sided tests in H3a/H3b/H3c.
+
+**H2a**: The results for H2a below indicate that the hypothesis has to
+be rejected. For court data, the average for legal target adjectives is
+*lower* than for the epistemic ones, and not, as we expected, higher.
+For the court data, we have to reject
+![formula](https://render.githubusercontent.com/render/math?math=\\overline%7B%7Cy%7C%7D*\\beta_%7Bepistemic%7D%3C\\overline%7B%7Cy%7C%7D*\\beta_%7Blegal%7D%3C\\overline%7B%7Cy%7C%7D*\\beta_%7Bmoral%7D)
+for
+![formula](https://render.githubusercontent.com/render/math?math=\\overline%7B%7Cy%7C%7D*\\beta_%7Blegal%7D%3C\\overline%7B%7Cy%7C%7D*\\beta_%7Bepistemic%7D%3C\\overline%7B%7Cy%7C%7D*\\beta_%7Bmoral%7D).
+Thus we have to reject H2a.
 
     $emmeans
     context = court:
@@ -231,6 +338,10 @@ P values are right-tailed
 
 **H2b**:
 
+The test results below (as well as the left hand side of the plot above)
+show that we also have to reject H2b. For the reddit data as well, legal
+target adjectives have a *lower* average than the epistemic ones.
+
     $emmeans
     context = reddit:
      cat       emmean        SE     df lower.CL upper.CL
@@ -252,7 +363,13 @@ P values are right-tailed
 
 ### H3a / H3b / H3c
 
-**H3a**:
+**H3a**: The test results for the between context contrasts for the
+family of three estimates (target adjective categories) are shown below.
+For H3a, we expect epistemic adjectives to have smaller conjoined
+sentiment values for the court data than for the reddit data (=
+alternative hypothesis). Based on the one-sided t-test we can reject the
+null hypothesis for the alternative hypothesis. Hence, we cannot reject
+H3a.
 
     $emmeans
     cat = epistemic:
@@ -272,7 +389,7 @@ P values are right-tailed
     Note: contrasts are still on the abs scale 
     P values are right-tailed 
 
-**H3b**:
+**H3b**: The same is true for H3b.
 
     $emmeans
     cat = legal:
@@ -292,7 +409,7 @@ P values are right-tailed
     Note: contrasts are still on the abs scale 
     P values are right-tailed 
 
-**H3c**:
+**H3c**: The same is true for H3c.
 
     $emmeans
     cat = tc:
@@ -311,6 +428,10 @@ P values are right-tailed
     
     Note: contrasts are still on the abs scale 
     P values are right-tailed 
+
+**tldr; H1/H1a/H1b cannot be rejected. H2a/H2b have to be rejected
+(legal concepts have lower averages than epistemic, not higher).
+H3/H3a/H3b/H3c cannot be rejected.**
 
 ## Script Workflow
 
