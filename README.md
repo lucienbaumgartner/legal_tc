@@ -1,7 +1,7 @@
 README
 ================
 Lucien Baumgartner
-7/23/2020
+8/12/2020
 
   - [WIP: To Dos](#wip-to-dos)
       - [Process](#process)
@@ -449,9 +449,9 @@ respective assembler scripts (BASH) in those folders
 (`src/legal/legal_batch_assembler.sh` and
 `src/baseline/batch_assembler.sh`).
 
-This includes: - `src/baseline/..`: - `01-lookup-to-reduce.R` -
-`02-lookup-to-finalize.R` - `src/legal/..`: - `01-lookup-to-reduce.R` -
-`02-lookup-to-finalize.R`; updated to: `02-lookup-to-finalize-ALT.R`
+This includes: - src/baseline/..: - 01-lookup-to-reduce.R -
+02-lookup-to-finalize.R - src/legal/..: - 01-lookup-to-reduce.R -
+02-lookup-to-finalize.R; updated to: 02-lookup-to-finalize-ALT.R
 
 ### Change Reddit Data ex post
 

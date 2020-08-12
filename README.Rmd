@@ -1,7 +1,7 @@
 ---
 title: "README"
 author: "Lucien Baumgartner"
-date: "7/23/2020"
+date: "8/12/2020"
 output: 
   github_document:
     toc: true
@@ -341,12 +341,12 @@ To gather the data, run `src/baseline/00-reddit-API.R` for the baseline and `src
 If you look for new search terms, rerun the respective scripts from prefix `01-.*` on for both `src/legal/` and `src/baseline/` or use the respective assembler scripts (BASH) in those folders (`src/legal/legal_batch_assembler.sh` and `src/baseline/batch_assembler.sh`).
 
 This includes:
-- `src/baseline/..`:
-    - `01-lookup-to-reduce.R`
-    - `02-lookup-to-finalize.R`
-- `src/legal/..`:
-    - `01-lookup-to-reduce.R`
-    - `02-lookup-to-finalize.R`; updated to: `02-lookup-to-finalize-ALT.R`
+- src/baseline/..:
+    - 01-lookup-to-reduce.R
+    - 02-lookup-to-finalize.R
+- src/legal/..:
+    - 01-lookup-to-reduce.R
+    - 02-lookup-to-finalize.R; updated to: 02-lookup-to-finalize-ALT.R
 
 ### Change Reddit Data ex post
 #### Gather new reddit data selectively
