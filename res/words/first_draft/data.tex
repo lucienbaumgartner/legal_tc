@@ -73,9 +73,15 @@ In the following, we will discuss the methods used in our two studies.
 
 \subsection{Study 2}
 
-In the second study, we focus on the legal corpus only. In order to be able to compare the results of the evaluative concepts classes to a baseline, we added corpus entries for the following descriptive target adjectives: . Instead of comparing context effects (Study 1), we want to inquire whether the concept classes cluster differently within the legal context. We use a combination of K-Means Clustering and Principal Component Analysis (PCA), which is informed by the sentiment values of the conjoined adjectives and a measure for lexical diversity of the target adjective, i.e. Yule's \textit{K} \citep{Yule1944, Tweedie1998}. The cluster analysis further includes information based on the vector space of the corpus, which is created using the Semantic Vectors package \citep{Widdows2008, Widdows2010, Widdows2016}. For every pair of target adjective and conjoined adjective, we compute the cosine similarities. Cosine similarities are essentially high dimensional representations of co-occurence measures, and inform the cluster analysis about the semantic similarity of the conjuncts by taking the whole corpus into account. In the final ANOVA model, the cosine similarities are added as weights for the sentiment values of the conjoined adjectives.
+In the second study, we focus on the legal corpus only. In order to be able to compare the results of the evaluative concepts classes to a baseline, we added corpus entries for the following descriptive target adjectives: . Instead of comparing context effects (Study 1), we want to inquire whether the concept classes cluster differently within the legal context. We use a combination of K-Means Clustering and Principal Component Analysis (PCA), which is informed by the sentiment values of the conjoined adjectives and a measure for lexical diversity of the target adjective, i.e. Yule's \textit{K} \citep{Yule1944, Tweedie1998}. The cluster analysis further includes information based on the vector space of the corpus, which is created using the \textit{Semantic Vectors} package \citep{Widdows2008, Widdows2010, Widdows2016}. For every pair of target adjective and conjoined adjective, we compute the cosine similarities. Cosine similarities are essentially high dimensional representations of co-occurence measures, and inform the cluster analysis about the semantic similarity of the conjuncts by taking the whole corpus into account. In the final ANOVA model, the cosine similarities are added as weights for the sentiment values of the conjoined adjectives.
 
 \section{Results}
+
+\subsection{Study 1}
+
+
+
+\subsection{Study 2}
 
 \bibliographystyle{apalike}
 \bibliography{legaltc-bib}
