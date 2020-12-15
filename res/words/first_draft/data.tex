@@ -3,6 +3,10 @@
 \usepackage{graphicx}
 \usepackage{csquotes}
 \usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage[table]{xcolor} 
+\usepackage{graphicx}
 
 %---------------------------------- NATBIB ----------------------------------%
 \makeatletter
@@ -49,6 +53,7 @@
 
 
 \begin{document}
+\graphicspath{ {../../../output/03-results/plots/} }
 
 \section{What Has to be Mentioned Before}
 \label{sec:before}
@@ -77,8 +82,50 @@ In the second study, we focus on the legal corpus only. In order to be able to c
 
 \section{Results}
 
-\subsection{Study 1}
+\subsection{Descriptive Statistics}
 
+\begin{table}[ht]
+\centering
+\rowcolors{5}{gray!25}{white}
+\begin{tabular}{rlrrrrrrrr}
+  & & \multicolumn{3}{c}{Sentiment Quantiles} & & \multicolumn{3}{c}{Lex. Diversity}\\
+   \cmidrule{3-5} \cmidrule{7-9}
+  Class & Polarity & 25\% & 50\% & 75\% & Avg. &  TTR & CTTR & K\\
+  \bottomrule
+Descriptive & neutral & -0.18 & 0.00 & 0.22 & 0.02 & 0.15 & 6.17 & 168.36 \\ 
+  Epistemic & negative & -0.44 & -0.33 & -0.10 & -0.26 & 0.16 & 6.09 & 124.78 \\ 
+  Epistemic & positive & 0.04 & 0.14 & 0.30 & 0.17 & 0.05 & 3.68 & 342.11 \\ 
+  Legal & negative & -0.40 & -0.29 & 0.00 & -0.19 & 0.13 & 4.69 & 249.80 \\ 
+  Legal & positive & 0.07 & 0.22 & 0.22 & 0.17 & 0.04 & 2.93 & 1530.47 \\ 
+  TC & negative & -0.44 & -0.35 & -0.20 & -0.30 & 0.11 & 4.81 & 507.77 \\ 
+  TC & positive & 0.06 & 0.16 & 0.33 & 0.21 & 0.06 & 3.55 & 640.33 \\ 
+   \hline
+\end{tabular}
+\caption{Summary Statistics Legal Corpus}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\rowcolors{5}{gray!25}{white}
+\begin{tabular}{rlrrrrrrrr}
+  & & \multicolumn{3}{c}{Sentiment Quantiles} & & \multicolumn{3}{c}{Lex. Diversity}\\
+   \cmidrule{3-5} \cmidrule{7-9}
+  Class & Polarity & 25\% & 50\% & 75\% & Avg. &  TTR & CTTR & K\\
+  \bottomrule
+Epistemic & negative & -0.52 & -0.42 & -0.18 & -0.34 & 0.10 & 7.65 & 73.19 \\ 
+  Epistemic & positive & 0.16 & 0.29 & 0.50 & 0.30 & 0.08 & 7.26 & 94.69 \\ 
+  Legal & negative & -0.55 & -0.44 & -0.24 & -0.38 & 0.13 & 6.65 & 198.62 \\ 
+  Legal & positive & 0.00 & 0.22 & 0.45 & 0.21 & 0.09 & 6.43 & 132.81 \\ 
+  TC & negative & -0.55 & -0.45 & -0.29 & -0.39 & 0.09 & 6.93 & 80.10 \\ 
+  TC & positive & 0.16 & 0.32 & 0.52 & 0.31 & 0.09 & 7.06 & 125.27 \\ 
+   \hline
+\end{tabular}
+   \caption{Summary Statistics Baseline Corpus}
+\end{table}
+
+\includegraphics[width=\textwidth, keepaspectratio]{bc_lc_summary_stats_adj-distr}
+
+\subsection{Study 1}
 
 
 \subsection{Study 2}
