@@ -1,0 +1,87 @@
+\begin{thebibliography}{}
+
+\bibitem[Baccianella et~al., 2010]{Baccianella2010}
+Baccianella, S., Esuli, A., and Sebastiani, F. (2010).
+\newblock {SENTIWORDNET 3.0: An Enhanced Lexical Resource for Sentiment
+  Analysis and Opinion Mining}.
+\newblock In {\em Proceedings of the 7th International Conference on Language
+  Resources and Evaluation}, pages 2200--2204.
+
+\bibitem[Baumgartner et~al., 2020]{Baumgartner2020}
+Baumgartner, J., Zannettou, S., Keegan, B., Squire, M., Blackburn, J., and Io,
+  P. (2020).
+\newblock {The Pushshift Reddit Dataset}.
+\newblock Technical report.
+
+\bibitem[Esuli and Sebastiani, 2006]{Esuli2006}
+Esuli, A. and Sebastiani, F. (2006).
+\newblock {SENTIWORDNET: A Publicly Available Lexical Resource for Opinion
+  Mining}.
+\newblock In {\em Proceedings of the Student Research Workshop at the 14th
+  Conference of the European Chapter of the Association for Computational
+  Linguistics}, pages 417--422.
+
+\bibitem[{Free Law Project}, 2020]{FreeLawProject2020}
+{Free Law Project} (2020).
+\newblock {Bulk Data – CourtListener.com}.
+
+\bibitem[Gatti et~al., 2016]{Gatti2016}
+Gatti, L., Guerini, M., and Turchi, M. (2016).
+\newblock {SentiWords: Deriving a High Precision and High Coverage Lexicon for
+  Sentiment Analysis}.
+\newblock {\em IEEE Transactions on Affective Computing}, 7(4):409--421.
+
+\bibitem[Guerini et~al., 2013]{Guerini2013}
+Guerini, M., Gatti, L., and Turchi, M. (2013).
+\newblock {Sentiment Analysis: How to Derive Prior Polarities from
+  SentiWordNet}.
+\newblock {\em EMNLP 2013 - 2013 Conference on Empirical Methods in Natural
+  Language Processing, Proceedings of the Conference}, pages 1259--1269.
+
+\bibitem[Straka and Strakov{\'{a}}, 2017]{Straka2017}
+Straka, M. and Strakov{\'{a}}, J. (2017).
+\newblock {Tokenizing, POS Tagging, Lemmatizing and Parsing UD 2.0 with
+  UDPipe}.
+\newblock In {\em Proceedings of the CoNLL 2017 Shared Task: Multilingual
+  Parsing from Raw Text to Universal Dependencies}.
+
+\bibitem[Straka and Strakov{\'{a}}, 2020]{Straka2020}
+Straka, M. and Strakov{\'{a}}, J. (2020).
+\newblock {UDPipe at EvaLatin 2020: Contextualized Embeddings and Treebank
+  Embeddings}.
+\newblock In {\em Proceedings of Language Resources and Evaluation}. arXiv.
+
+\bibitem[Tweedie and Baayen, 1998]{Tweedie1998}
+Tweedie, F.~J. and Baayen, R.~H. (1998).
+\newblock {How Variable May a Constant be? Measures of Lexical Richness in
+  Perspective}.
+\newblock Technical report.
+
+\bibitem[Widdows and Cohen, 2010]{Widdows2010}
+Widdows, D. and Cohen, T. (2010).
+\newblock {The semantic vectors package: New algorithms and public tools for
+  distributional semantics}.
+\newblock In {\em Proceedings - 2010 IEEE 4th International Conference on
+  Semantic Computing, ICSC 2010}, pages 9--15.
+
+\bibitem[Widdows and Cohen, 2016]{Widdows2016}
+Widdows, D. and Cohen, T. (2016).
+\newblock {Graded semantic vectors: An approach to representing graded
+  quantities in generalized quantum models}.
+\newblock In {\em Lecture Notes in Computer Science (including subseries
+  Lecture Notes in Artificial Intelligence and Lecture Notes in
+  Bioinformatics)}, volume 9535, pages 231--244. Springer Verlag.
+
+\bibitem[Widdows and Ferraro, 2008]{Widdows2008}
+Widdows, D. and Ferraro, K. (2008).
+\newblock {Semantic Vectors: A Scalable Open Source Package and Online
+  Technology Management Application}.
+\newblock In {\em In Proceedings of the Sixth International Conference on
+  Language Resources and Evaluation (LREC 2008)}.
+
+\bibitem[Yule, 1944]{Yule1944}
+Yule, G.~U. (1944).
+\newblock {\em {The Statistical Study of Literary Vocabulary}}.
+\newblock Cambridge University Press.
+
+\end{thebibliography}

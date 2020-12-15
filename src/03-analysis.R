@@ -151,10 +151,10 @@ p1 <- ggplot(dfx, aes(y=abs(sentiWords), x=context)) +
   ) +
   labs(
     y = 'Absolute sentiWords Score',
-    title = abbrv('Absolute Sentiment Distribution by Context', width = 40)
+    title = abbrv('Absolute Observed Sentiment Distribution by Context', width = 50)
   )
 p1
-ggsave(p1, filename = '../output/03-results/plots/new-h1.png', width = 11, height = 6)
+ggsave(p1, filename = '../output/03-results/plots/new-h1.png', width = 5, height = 5)
 
 levene.test(abs(dfx$sentiWords), dfx$context, location = 'mean', trim.alpha=0.25, correction.method = 'correction.factor')
 set.seed(12345)
@@ -225,7 +225,7 @@ p <- ggplot(dfx, aes(y=abs(sentiWords), x=cat)) +
   labs(
     y = 'Absolute sentiWords Score',
     x = 'Category',
-    title = abbrv('Absolute Sentiment Distribution by Categories within Context (H2a/H2b)', width = 70)
+    title = abbrv('Absolute Observed Sentiment Distribution by Categories within Context', width = 65)
   ) 
 p
 ggsave(p, filename = '../output/03-results/plots/new-H2a_H2b.png', width = 11, height = 6)
@@ -249,10 +249,10 @@ p1 <- ggplot(temp, aes(x = cat, ymin = lower.CL, ymax = upper.CL, y = emmean, gr
   geom_point() +
   geom_path() +
   labs(
-    y = 'Estimated Means\n(Absolute sentiWords Score)',
+    y = 'Estimated Marginal Means\n(Absolute sentiWords Score)',
     x = 'Category',
     colour = 'Context',
-    title = abbrv('Estimated Means of Absolute Sentiment Distribution by Categories Between Context (H3a/H3b/H3c)', width = 40)
+    title = abbrv('Estimated Marginal Means of Absolute Sentiment Distribution by Categories Between Context', width = 40)
   ) +
   theme(
     plot.title = element_text(face= 'bold'),

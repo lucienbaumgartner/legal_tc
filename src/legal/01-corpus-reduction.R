@@ -111,6 +111,18 @@ df <- lapply(fileslist, function(x){
 
 df <- do.call(rbind, df)
 
+### diversity analysis
+div_mes <- df %>% 
+  group_by(ADJ1) %>% 
+  summarise(ADJ_full = paste0(rep(ADJ2, n), collapse = ' '),
+            n = n())
+res_div <- quanteda::tokens(div_mes$ADJ_full)
+res_div <- textstat_lexdiv(res_div, measure = c("TTR", "CTTR", "K"))
+res_div <- cbind(res_div, div_mes[, c('ADJ1', 'n')])
+res_div %>% arrange(desc(n))
+
+res_div %>% filter(n >= 50) %>% arrange(desc(n)) %>% write.csv(., file = '../output/03-results/tables/diversity-analysis-inductive.txt', quote = F, row.names = F)
+
 aggr <- df %>% group_by(ADJ1, ADJ2) %>% 
   summarise(n = sum(n), sentiWords = unique(sentiWords)) %>%
   mutate(perc = n/sum(n),

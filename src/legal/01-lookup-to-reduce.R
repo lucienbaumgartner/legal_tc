@@ -16,8 +16,10 @@ getOption('future.globals.maxSize')
 #datasets <- list.files('../../output/00-bulk-data/legal', full.names = T)
 datasets <- list.files('/Volumes/INTENSO/legal_tc/output/00-bulk-data/legal', full.names = T)
 datasets <- datasets[!grepl('scotus', datasets)]
-search.terms <- read.table('../../input/dict-add.txt', header = T, stringsAsFactors = F, sep=',')
-
+#search.terms <- read.table('../../input/dict-add.txt', header = T, stringsAsFactors = F, sep=',')
+search.terms <- read.table('../../input/descriptive_terms.txt', header = T, stringsAsFactors = F, sep=',')
+search.term <- mutate(search.terms, cat = 'descriptive')
+  
 for(i in datasets){
   
   #i = datasets[1]
@@ -70,7 +72,7 @@ for(i in datasets){
   df <- as_tibble(df)
   #df
   # save data
-  out <- paste0('../../output/01-reduced-corpora/legal/new-', gsub('.*\\/', '', i))
+  out <- paste0('../../output/01-reduced-corpora/legal/descriptive-', gsub('.*\\/', '', i))
   save(df, file = out)
   rm(df)
   rm(reg_matches)

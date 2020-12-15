@@ -66,10 +66,10 @@ substituted with another, more traditional corpus later in the process.
 
 bulk-data:
 
-  - reddit comments; time period: 01.01.2020-30.06.2020, max. 1000
+  - reddit comments; time period: 01.01.2020-30.07.2020, max. 1000
     comments per search and day; SOURCE: [pushshift
-    API](https://pushshift.io/api-parameters/) (retrieved 21.07.2020,
-    open data)
+    API](https://pushshift.io/api-parameters/) (last retrieved
+    11.08.2020, open data)
   - [court
     opinions](https://legal-dictionary.thefreedictionary.com/Court+Opinion)
     from Court of Appeals for 1st to 11th circuit; SOURCE: [Court
@@ -78,9 +78,8 @@ bulk-data:
 
 The Court of Appeals are among the most influential courts in the US.
 They hand over cases to the US Supreme Court and thus are a ‘legal
-bottleneck’. We focus on a time period from 1980-2020 which encompasses
-XXX raw documents. **The current sampling process draws 60% of all
-document per court.**
+bottleneck’. We focus on a time period from 1980-2020. **The current
+sampling process draws 60% of all document per court.**
 
 ![Court of
 Appeals](res/img/2560px-US_Court_of_Appeals_and_District_Court_map.svg.png)

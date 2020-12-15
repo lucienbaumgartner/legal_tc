@@ -21,12 +21,13 @@ getwd()
 
 # function for linebreaks in plots
 abbrv <- function(x, width = 200) lapply(strwrap(x, width, simplify = FALSE), paste, collapse="\n")
-kw <- read.table('../input/dict-2.txt', stringsAsFactors = F, sep=',', header = T) %>% rename(TARGET = word)
+#kw <- read.table('../input/dict-2.txt', stringsAsFactors = F, sep=',', header = T) %>% rename(TARGET = word)
+kw <- read.table('../input/descriptive_terms.txt', stringsAsFactors = F, sep=',', header = T) %>% rename(TARGET = word)
 
 ### load legal data
-fileslist <- list.files('../output/02-finalized-corpora/legal', full.names = T)
+fileslist <- list.files('../output/02-finalized-corpora/legal', full.names = T, pattern = 'descriptive')
 fileslist <- fileslist[!grepl('scotus', fileslist)]
-df <- pblapply(fileslist[-length(fileslist)], function(x){
+df <- pblapply(fileslist, function(x){
   load(x)
   df <- mutate(df, context = gsub('\\.RDS|.*\\/', '', x))
   return(df)
@@ -93,6 +94,23 @@ means <- dfx %>% group_by(TARGET, CCONJ) %>% summarise(sentiWords = mean(sentiWo
 means <- left_join(means, annot)
 
 dfx %>% group_by(TARGET, context) %>% summarise(n = n())
+
+### compute diversity measures
+div_mes <- dfx %>% 
+  group_by(TARGET) %>% 
+  summarise(ADJ_full = paste0(ADJ, collapse = ' '),
+            n = n())
+res_div <- quanteda::tokens(div_mes$ADJ_full)
+res_div <- textstat_lexdiv(res_div, measure = c("TTR", "CTTR", "K"))
+res_div <- cbind(res_div, div_mes[, c('TARGET', 'n')])
+head(res_div)
+
+plot(res_div$TTR, res_div$n)
+
+write.csv(res_div, file = '../output/03-results/tables/diversity-analysis-descriptive.txt', quote = F, row.names = F)
+
+res_div %>% arrange(desc(CTTR)) %>% slice_head(prop = 0.5) %>% filter(n >= 500)
+
 
 means <- means %>% 
   arrange(TARGET_pol, desc(sentiWords)) %>% 

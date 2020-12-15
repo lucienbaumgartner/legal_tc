@@ -1,0 +1,49 @@
+This is BibTeX, Version 0.99d (TeX Live 2016)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: data.aux
+The style file: apalike.bst
+Database file #1: legaltc-bib.bib
+Warning--empty institution in Baumgartner2020
+Warning--empty institution in Tweedie1998
+You've used 13 entries,
+            1935 wiz_defined-function locations,
+            557 strings with 6552 characters,
+and the built_in function-call counts, 5385 in all, are:
+= -- 543
+> -- 192
+< -- 15
++ -- 62
+- -- 62
+* -- 397
+:= -- 888
+add.period$ -- 40
+call.type$ -- 13
+change.case$ -- 97
+chr.to.int$ -- 13
+cite$ -- 15
+duplicate$ -- 245
+empty$ -- 396
+format.name$ -- 89
+if$ -- 1112
+int.to.chr$ -- 1
+int.to.str$ -- 0
+missing$ -- 11
+newline$ -- 67
+num.names$ -- 39
+pop$ -- 115
+preamble$ -- 1
+purify$ -- 96
+quote$ -- 0
+skip$ -- 184
+stack$ -- 0
+substring$ -- 344
+swap$ -- 56
+text.length$ -- 6
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 76
+warning$ -- 2
+while$ -- 43
+width$ -- 0
+write$ -- 165
+(There were 2 warnings)
