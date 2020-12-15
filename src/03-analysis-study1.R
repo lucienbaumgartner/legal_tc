@@ -1,6 +1,10 @@
+# !diagnostics off
 library(quanteda)
 library(ggplot2)
 library(dplyr)
+library(emmeans)
+library(xtable)
+library(stargazer)
 
 rm(list=ls())
 
@@ -9,12 +13,25 @@ getwd()
 
 # function for linebreaks in plots
 abbrv <- function(x, width = 200) lapply(strwrap(x, width, simplify = FALSE), paste, collapse="\n")
-load('../../output/02-finalized-corpora/baseline/reddit/BC_consolidated.RDS')
-load('../../output/02-finalized-corpora/legal/LC_consolidated.RDS')
+# load data
+load('../output/02-finalized-corpora/baseline/reddit/BC_consolidated.RDS')
+bc <- df
+load('../output/02-finalized-corpora/legal/LC_consolidated.RDS')
+lc <- df
+rm(df)
+# combine to full corpus
+df <- rbind(bc, select(lc, -id, -year, -court)) %>% 
+  mutate(cat = dplyr::recode(cat, epistemic = 'Epistemic', legal = 'Legal', tc = 'TC'),
+         context = dplyr::recode(context, court = 'LC', reddit = 'BC'))
+# filter out descriptive target adjectives for study 1
+df <- filter(df, !TARGET_pol == 'neutral')
+
+# create group variable
+df <- mutate(df, group = paste0(cat, TARGET_pol, collapse = '_'))
 
 ## test ANOVA assumptions
 # homogeneity of variances
-levene.test(df$sentiWords, df$group, location = 'mean', trim.alpha=0.25, correction.method = 'correction.factor')
+leveneTest(df$sentiWords, df$group, location = 'mean', trim.alpha=0.25, correction.method = 'correction.factor')
 # normality
 # per group
 lapply(unique(df$group), function(x){shapiro.test(df$value[df$group==x])}) %>% setNames(., unique(df$group))
@@ -23,22 +40,34 @@ shapiro.test(df$sentiWords)
 # conclusion: non-parametric tests advised
 
 ### H1
-m1 <- lm(abs(sentiWords) ~ context, data = dfx)
+m1 <- lm(abs(sentiWords) ~ context, data = df)
 anova(m1)
-emm1 <-  emmeans(m1, specs = pairwise ~ context, at = list(.group = c("reddit", "legal")))
+summary(m1)
+emm1 <-  emmeans(m1, specs = pairwise ~ context, at = list(.group = c("BC", "LC")))
 emm1
+# write out results
+res1 <- xtable(emm1$emmeans)
+print(res1, include.rownames = F)
 emm1 <- pwpp(emm1$emmeans, method = "trt.vs.ctrl1", type = "response", side = ">")
 emm1
 
 ### H1a & H1b
-m2 <- lm(sentiWords ~ context * TARGET_pol, data = dfx)
+m2 <- lm(sentiWords ~ context * TARGET_pol, data = df)
 anova(m2)
-emm2 <- emmeans(m2, specs = pairwise ~ context, at = list(.group = c("reddit", "legal")), by = 'TARGET_pol')
+summary(m2)
+emm2 <- emmeans(m2, specs = pairwise ~ context, at = list(.group = c("BC", "LC")), by = 'TARGET_pol')
 emm2
+# write out results
+res2 <- xtable(emm2$emmeans)
+print(res2, include.rownames = F)
 emm2 <- pwpp(emm2$emmeans, method = "trt.vs.ctrl1", type = "response", side = ">")
 emm2
 
 ### H2a & H2b
-m3 <- lm(abs(sentiWords) ~ context * cat, data = dfx)
-emm3 <- emmeans(m3, specs = pairwise ~ cat, at = list(.group = c("reddit", "legal")), by = 'context')
+m3 <- lm(abs(sentiWords) ~ context * cat, data = df)
+summary(m3)
+stargazer(m3)
+emm3 <- emmeans(m3, specs = pairwise ~ context, at = list(.group = c("Epistemic", "TC", "Legal")), by = 'cat')
 emm3
+res3 <- xtable(emm3$contrasts)
+print(res3, include.rownames = F)

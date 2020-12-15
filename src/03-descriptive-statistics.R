@@ -151,4 +151,4 @@ theme_update(
 )
 p <- grid.arrange(p2, p1, nrow =2)
 ggsave(p, filename = '../output/03-results/plots/bc_lc_summary_stats_adj-distr.pdf', width = 8, height = 9)
-
+ggsave(p3, filename = '../output/03-results/plots/lc_descriptive_adj-distr.pdf', width = 4, height = 3)
