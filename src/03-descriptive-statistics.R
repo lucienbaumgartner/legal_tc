@@ -30,7 +30,35 @@ load('../output/02-finalized-corpora/legal/LC_consolidated.RDS')
 lc <- df
 rm(df)
 
-### compute aggregates for each corpus
+### write out adjective list with aggregates
+df <- rbind(mutate(bc, TARGET_pol_new = TARGET_pol), select(lc, -id, -year, -court)) %>% 
+  mutate(cat = dplyr::recode(cat, epistemic = 'Epistemic', legal = 'Legal', tc = 'TC', descriptive = 'Descriptive'),
+         context = dplyr::recode(context, court = 'LC', reddit = 'BC'))
+
+
+### write out adjective list with aggregates
+# quantiles
+df_quants <- df %>% 
+  group_by(cat, TARGET, TARGET_pol) %>% 
+  summarize_at(vars(sentiWords), p_funs)
+# average
+df_avg <- df %>% 
+  group_by(cat, TARGET, TARGET_pol) %>% 
+  summarise(mean = mean(sentiWords, na.rm = T))
+# diversity
+df_div <- df %>% 
+  group_by(cat, TARGET, TARGET_pol) %>% 
+  summarize(conjuncts = paste0(ADJ, collapse = ' '),
+            n = n())
+df_div <- cbind(df_div, textstat_lexdiv(tokens(df_div$conjuncts), measure = c('TTR', 'CTTR', 'K')))
+df_div <- select(df_div, -conjuncts, -document)
+# combine
+df_summary <- left_join(df_quants, df_avg) %>% left_join(., df_div) %>% arrange(cat, TARGET_pol, TARGET)
+# write out results
+write.csv(df_summary, file = '../output/03-results/tables/COMBINED_summary_stats.csv', quote = F, row.names = F)
+df_summary <- xtable(df_summary)
+print(df_summary, include.rownames =F , file = '../output/03-results/tables/COMBINED_summary_stats.tex')
+
 ## LC
 # quantiles
 lc_quants <- lc %>% 
@@ -43,7 +71,7 @@ lc_avg <- lc %>%
 # diversity
 lc_div <- lc %>% 
   group_by(cat, TARGET_pol) %>% 
-  summarize(conjuncts = paste0(ADJ, collapse = ' '),
+  summarize(conjuncts = paste0(ADJ, collapse = ' '), 
             n = n())
 lc_div <- cbind(lc_div, textstat_lexdiv(tokens(lc_div$conjuncts), measure = c('TTR', 'CTTR', 'K')))
 lc_div <- select(lc_div, -conjuncts, -document)
@@ -73,15 +101,12 @@ bc_div <- select(bc_div, -conjuncts, -document)
 # combine
 bc_summary <- left_join(bc_quants, bc_avg) %>% left_join(., bc_div)
 # write out results
-write.csv(bc_summary, file = '../output/03-results/tables/bc_summary_stats.csv', quote = F, row.names = F)
+write.csv(bc_summary, file = '../output/03-results/tables/BC_summary_stats.csv', quote = F, row.names = F)
 bc_summary <- xtable(bc_summary)
-print(bc_summary, include.rownames =F , file = '../output/03-results/tables/bc_summary_stats.tex')
+print(bc_summary, include.rownames =F , file = '../output/03-results/tables/BC_summary_stats.tex')
 
 ### 
 #### adj distribution
-df <- rbind(bc, select(lc, -id, -year, -court)) %>% 
-  mutate(cat = dplyr::recode(cat, epistemic = 'Epistemic', legal = 'Legal', tc = 'TC'),
-         context = dplyr::recode(context, court = 'LC', reddit = 'BC'))
 means <- df %>% group_by(context, TARGET_pol, cat, TARGET) %>% summarise(avg = mean(sentiWords, na.rm = T))
 means_overall <- df %>% group_by(context, TARGET_pol, cat) %>% summarise(avg = mean(sentiWords, na.rm = T))
 p1 <- 
@@ -124,7 +149,7 @@ p2 <-
     title = abbrv(paste0('Positive Concepts'), width = 40)
   )
 p3 <- 
-  df %>% filter(TARGET_pol == 'neutral') %>% 
+  df %>% filter(cat == 'descriptive') %>% 
   ggplot(., aes(x = TARGET, y = sentiWords, fill = context)) +
   geom_boxplot(outlier.color = NA) +
   geom_point(data = means %>% filter(TARGET_pol == 'neutral'), aes(y = avg, color = context)) +

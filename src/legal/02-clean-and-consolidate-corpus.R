@@ -12,7 +12,11 @@ getwd()
 
 # read in target adjective lists
 kw1 <- read.table('../../input/dict-3.txt', stringsAsFactors = F, sep=',', header = T) %>% rename(TARGET = word)
-kw2 <- read.table('../../input/descriptive_terms.txt', stringsAsFactors = F, sep=',', header = T) %>% rename(TARGET = word) %>% mutate(cat = 'descriptive')
+kw2 <- read.table('../../input/descriptive-add.txt', stringsAsFactors = F, sep=',', header = T) %>% 
+  rbind(., read.table('../../input/descriptive_terms.txt', stringsAsFactors = F, sep=',', header = T) %>% 
+              mutate(cat = 'descriptive')) %>% 
+  rename(TARGET = word)
+
 kw <- rbind(kw1, kw2)
 
 ### load legal data
@@ -47,12 +51,21 @@ df <- left_join(df, kw)
 annot <- tokens_lookup(tokens(unique(df$TARGET)), dictionary = sentiWords$dichot)
 annot <- tibble(TARGET = unique(df$TARGET), TARGET_pol = sapply(annot, function(x) x[1]))
 # manually fix NAs
-annot <- annot %>% mutate(TARGET_pol = case_when(
-  TARGET %in% c('arbitrary', 'illegal') ~ 'negative',
-  TARGET %in% c('appropriate') ~ 'positive',
-  TARGET %in% kw2$TARGET ~ 'neutral',
-  TRUE ~ TARGET_pol))
+annot <- annot %>% mutate(
+  TARGET_pol_new = case_when(
+    TARGET == 'complex' ~ 'negative',
+    TARGET %in% c('illegal', 'arbitrary') ~ 'negative',
+    TARGET %in% c('appropriate') ~ 'positive',
+    TRUE ~ TARGET_pol
+    ),
+  TARGET_pol = case_when(
+    TARGET %in% c('arbitrary', 'illegal') ~ 'negative',
+    TARGET %in% c('appropriate') ~ 'positive',
+    TARGET %in% kw2$TARGET ~ 'neutral',
+    TRUE ~ TARGET_pol)
+  )
 df <- left_join(df, annot)
+#df$TARGET_pol_new[df$TARGET == 'complex'] <- 'negative'
 
 ### filter out problematic metadata
 dfx <- df
@@ -81,6 +94,7 @@ rm(dfx)
 means <- df %>% group_by(TARGET, cat) %>% summarise(avg_conj_sentiment = mean(sentiWords, na.rm = T))
 means <- left_join(means, annot)
 means <- means %>% arrange(cat, TARGET_pol, desc(avg_conj_sentiment))
+print(means, n=200)
 write.csv(means, file = '../../output/03-results/tables/LC_avg_conj_sentiment.csv', quote = F, row.names = F)
 
 ### compute diversity measures to decide which descriptive adjectives to keep
@@ -102,7 +116,11 @@ f_res_div <- res_div %>% filter(!((cat == 'legal' & TARGET_pol == 'negative') | 
 # negative legal concepts only have 5 entries rather than 6, so that we have to slice differently
 f_res_div <- rbind(f_res_div, res_div %>% filter(cat == 'legal' & TARGET_pol == 'negative' & n >= 200) %>% arrange(K))
 # descriptive concepts have more than 6 entries, so that we have to slice differently
-f_res_div <- rbind(f_res_div, res_div %>% filter(TARGET_pol == 'neutral') %>% arrange(K) %>% slice_head(prop = 0.5) %>% arrange(desc(n)) %>% slice_head(prop = 0.25))
+# three only: f_res_div <- rbind(f_res_div, res_div %>% filter(cat == 'descriptive') %>% arrange(K) %>% slice_head(prop = 0.5) %>% arrange(desc(n)) %>% slice_head(prop = 0.25))
+# neg
+f_res_div <- rbind(f_res_div, res_div %>% filter(cat == 'descriptive' & TARGET_pol_new == 'negative') %>% na.omit %>% group_by(TARGET_pol_new) %>% arrange(desc(n), K) %>% slice_head(prop = 0.5))
+# pos
+f_res_div <- rbind(f_res_div, res_div %>% filter(cat == 'descriptive' & TARGET_pol_new == 'positive') %>% na.omit %>% group_by(TARGET_pol_new) %>% arrange(K) %>% slice_head(prop = 0.5) %>% arrange(desc(n)) %>% slice_head(prop = 0.3))
 # same for epistemic concepts
 f_res_div <- f_res_div <- rbind(f_res_div, res_div %>% filter(cat == 'epistemic') %>% group_by(TARGET_pol) %>% arrange(K) %>% slice_head(prop = 0.5))
 # write out results

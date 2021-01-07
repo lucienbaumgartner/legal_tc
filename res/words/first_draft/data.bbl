@@ -57,28 +57,6 @@ Tweedie, F.~J. and Baayen, R.~H. (1998).
   Perspective}.
 \newblock Technical report.
 
-\bibitem[Widdows and Cohen, 2010]{Widdows2010}
-Widdows, D. and Cohen, T. (2010).
-\newblock {The semantic vectors package: New algorithms and public tools for
-  distributional semantics}.
-\newblock In {\em Proceedings - 2010 IEEE 4th International Conference on
-  Semantic Computing, ICSC 2010}, pages 9--15.
-
-\bibitem[Widdows and Cohen, 2016]{Widdows2016}
-Widdows, D. and Cohen, T. (2016).
-\newblock {Graded semantic vectors: An approach to representing graded
-  quantities in generalized quantum models}.
-\newblock In {\em Lecture Notes in Computer Science (including subseries
-  Lecture Notes in Artificial Intelligence and Lecture Notes in
-  Bioinformatics)}, volume 9535, pages 231--244. Springer Verlag.
-
-\bibitem[Widdows and Ferraro, 2008]{Widdows2008}
-Widdows, D. and Ferraro, K. (2008).
-\newblock {Semantic Vectors: A Scalable Open Source Package and Online
-  Technology Management Application}.
-\newblock In {\em In Proceedings of the Sixth International Conference on
-  Language Resources and Evaluation (LREC 2008)}.
-
 \bibitem[Yule, 1944]{Yule1944}
 Yule, G.~U. (1944).
 \newblock {\em {The Statistical Study of Literary Vocabulary}}.

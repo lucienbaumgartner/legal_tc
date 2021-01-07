@@ -17,10 +17,11 @@ setwd('~/legal_tc/src/legal/')
 spacy_initialize()
 
 #datasets <- list.files('../../output/01-reduced-corpora/legal', full.names = T, pattern = 'new')
-datasets <- list.files('../../output/01-reduced-corpora/legal', full.names = T, pattern = 'descriptive')
+datasets <- list.files('../../output/01-reduced-corpora/legal', full.names = T, pattern = 'descriptive-addon')
 datasets <- datasets[!grepl('scotus', datasets)]
 #search.terms <- read.table('../../input/dict-add.txt', header = T, stringsAsFactors = F, sep=',')
-search.terms <- read.table('../../input/descriptive_terms.txt', header = T, stringsAsFactors = F, sep=',')
+#search.terms <- read.table('../../input/descriptive_terms.txt', header = T, stringsAsFactors = F, sep=',')
+search.terms <- read.table('../../input/descriptive-add.txt', header = T, stringsAsFactors = F, sep=',')
 search.terms <- mutate(search.terms, cat = 'descriptive')
 
 syntax.regex <- '(ADV\\s)?ADJ\\s(PUNCT\\s)?CCONJ\\s(ADV\\s)?ADJ'
@@ -100,7 +101,7 @@ for(i in datasets){
   df <- as_tibble(df)
   #table(df$TARGET)
   df <- filter(df, TARGET%in%search.terms$word)
-  out <- paste0('../../output/02-finalized-corpora/legal/descriptive-', gsub('.*\\/', '', i))
+  out <- paste0('../../output/02-finalized-corpora/legal/descriptive-addon-', gsub('.*\\/', '', i))
   save(df, file=out)
   rm(list = c('df', 'txtparsed', 'txtparsed_adj'))
   

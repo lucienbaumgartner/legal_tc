@@ -1,0 +1,3 @@
+word,cat
+limited,descriptive
+complex,descriptive

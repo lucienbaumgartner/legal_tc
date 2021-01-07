@@ -11,13 +11,14 @@ setwd('~/legal_tc/src/legal/')
 bytes <- 1500*1024^2
 options(future.globals.maxSize = bytes)
 getOption('future.globals.maxSize')
-#setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 #datasets <- list.files('../../output/00-bulk-data/legal', full.names = T)
 datasets <- list.files('/Volumes/INTENSO/legal_tc/output/00-bulk-data/legal', full.names = T)
 datasets <- datasets[!grepl('scotus', datasets)]
 #search.terms <- read.table('../../input/dict-add.txt', header = T, stringsAsFactors = F, sep=',')
-search.terms <- read.table('../../input/descriptive_terms.txt', header = T, stringsAsFactors = F, sep=',')
+#search.terms <- read.table('../../input/descriptive_terms.txt', header = T, stringsAsFactors = F, sep=',')
+search.terms <- read.table('../../input/descriptive-add.txt', header = T, stringsAsFactors = F, sep=',')
 search.term <- mutate(search.terms, cat = 'descriptive')
   
 for(i in datasets){
@@ -72,7 +73,7 @@ for(i in datasets){
   df <- as_tibble(df)
   #df
   # save data
-  out <- paste0('../../output/01-reduced-corpora/legal/descriptive-', gsub('.*\\/', '', i))
+  out <- paste0('../../output/01-reduced-corpora/legal/descriptive-addon-', gsub('.*\\/', '', i))
   save(df, file = out)
   rm(df)
   rm(reg_matches)

@@ -15,7 +15,7 @@ getwd()
 abbrv <- function(x, width = 200) lapply(strwrap(x, width, simplify = FALSE), paste, collapse="\n")
 # load data
 load('../output/02-finalized-corpora/baseline/reddit/BC_consolidated.RDS')
-bc <- df
+bc <- df %>% mutate(TARGET_pol_new = TARGET_pol)
 load('../output/02-finalized-corpora/legal/LC_consolidated.RDS')
 lc <- df
 rm(df)
@@ -53,10 +53,12 @@ emm1
 
 ### H1a & H1b
 m2 <- lm(sentiWords ~ context * TARGET_pol, data = df)
-anova(m2)
 summary(m2)
 emm2 <- emmeans(m2, specs = pairwise ~ context, at = list(.group = c("BC", "LC")), by = 'TARGET_pol')
 emm2
+m2a <- aov(sentiWords ~ context * TARGET_pol, data = df)
+emmeans(m2a, specs = pairwise ~ context, at = list(.group = c("BC", "LC")), by = 'TARGET_pol')
+
 # write out results
 res2 <- xtable(emm2$emmeans)
 print(res2, include.rownames = F)

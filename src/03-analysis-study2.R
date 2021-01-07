@@ -25,7 +25,17 @@ df <- df %>%
 # differences between concept classes
 m1 <- lm(abs(sentiWords) ~ cat, data = df)
 emm1 <- emmeans(m1, specs = pairwise ~ cat)
+emm1
 res1 <- xtable(emm1$contrasts)
+print(res1, include.rownames = F)
+# same results in anove
+m1a <- aov(abs(sentiWords) ~ cat, data = df)
+emmeans(m1a, specs = pairwise ~ cat)
+
+# differences between concept classes
+m2 <- lm(sentiWords ~ cat*TARGET_pol_new, data = df)
+emm2 <- emmeans(m2, specs = pairwise ~ cat, by ='TARGET_pol_new')
+res2 <- xtable(emm2$contrasts)
 print(res1, include.rownames = F)
 
 # K-Means Cluster Analysis
