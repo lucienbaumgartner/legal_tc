@@ -5,7 +5,10 @@ library(purrr)
 library(xtable)
 library(envalysis)
 library(gridExtra)
-
+library(pbmcapply)
+library(tm)
+library(textstem)
+library(emmeans)
 rm(list=ls())
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
@@ -177,3 +180,94 @@ theme_update(
 p <- grid.arrange(p2, p1, nrow =2)
 ggsave(p, filename = '../output/03-results/plots/bc_lc_summary_stats_adj-distr.pdf', width = 8, height = 9)
 ggsave(p3, filename = '../output/03-results/plots/lc_descriptive_adj-distr.pdf', width = 4, height = 3)
+
+### write out overall sentiment analysis
+load('../res/sentiWords-db-full-PoS.RDS')
+head(sentiWords$num)
+collection <- list()
+for(i in c(lc, bc)){
+  #i <-  bc
+  set.seed(562647)
+  p_source <- sample_n(i, 2000)
+  p <- p_source$txt %>% setNames(., paste0('doc', 1:2000))
+  p <- quanteda::tokens(tolower(p), remove_punct = T, remove_symbols = T, remove_numbers = T, remove_url = T, remove_separators = T)
+  stopwords_regex = paste(tm::stopwords('en'), collapse = '\\b|\\b')
+  stopwords_regex = paste0('\\b', stopwords_regex, '\\b')
+  p <- pbmclapply(p, function(x){
+    #x <- p[[1]]
+    tmp <- unlist(x) 
+    tmp <- stringr::str_replace_all(tmp, stopwords_regex, '')
+    tmp <- tmp[nchar(tmp) > 2]
+    tmp <- tmp[!grepl('[0-9]+|[[:punct:]]', tmp, perl = T)]
+    tmp <- textstem::lemmatize_words(tmp)
+    tmp <- tmp[!tmp == '']
+    return(tmp)
+  }, mc.cores = 4)
+  p <- pbmclapply(p, function(x){
+    #x <- p[[1]]
+    tmp <- quanteda::tokens_lookup(quanteda::tokens(x), dictionary = sentiWords$num)
+    tmp <- unlist(tmp)
+    tmp <- as.numeric(tmp[!tmp == 0])
+    return(tmp)
+  }, mc.cores = 4)
+  save(p, file = '~/Downloads/senti2-tmp.RDS')
+  length(p)
+  p_source$doc_sentiment <- p
+  head(p_source)
+  #save(p_source, file='../output/02-finalized-corpora/baseline/reddit/BC_consolidated_full_sentiment.RDS', compress = 'gzip')
+  save(p_source, file='../output/02-finalized-corpora/legal/LC_consolidated_full_sentiment.RDS', compress = 'gzip')
+  collection <- append(collection, list(p_source))
+}
+
+
+load('../output/02-finalized-corpora/baseline/reddit/BC_consolidated_full_sentiment.RDS')
+collection[[1]] <- p_source
+load('../output/02-finalized-corpora/legal/LC_consolidated_full_sentiment.RDS')
+collection[[2]] <- p_source
+
+str(collection)
+### MEANS by POLARITY
+## means of means
+means_lc_per_doc <- lapply(collection[[1]]$doc_sentiment, mean)
+means_bc_per_doc <- lapply(collection[[2]]$doc_sentiment, mean)
+mean(unlist(means_lc_per_doc))
+mean(unlist(means_bc_per_doc))
+## significance test
+data_m1 <- rbind(tibble(sentiment = unlist(means_lc_per_doc), corpus = 'lc'),
+            tibble(sentiment = unlist(means_bc_per_doc), corpus = 'bc'))
+m1 <- lm(sentiment ~ corpus, data = data_m1)
+emmeans(m1, specs = pairwise ~ corpus)
+
+## means overall
+mList_lc <- unlist(collection[[1]]$doc_sentiment)
+mean(mList_lc)
+mList_bc <- unlist(collection[[2]]$doc_sentiment)
+mean(mList_bc)
+## significance test
+data_m2 <- rbind(tibble(sentiment = mList_lc, corpus = 'lc'),
+                 tibble(sentiment = mList_bc, corpus = 'bc'))
+m2 <- lm(sentiment ~ corpus, data = data_m2)
+emmeans(m2, specs = pairwise ~ corpus)
+
+### ABSOLUTE MEANS (INTENSITY)
+## means of means
+abs_means_lc_per_doc <- lapply(collection[[1]]$doc_sentiment, function(x) mean(abs(x)))
+abs_means_bc_per_doc <- lapply(collection[[2]]$doc_sentiment, function(x) mean(abs(x)))
+mean(unlist(abs_means_lc_per_doc))
+mean(unlist(abs_means_bc_per_doc))
+## significance test
+data_m3 <- rbind(tibble(sentiment = unlist(abs_means_lc_per_doc), corpus = 'lc'),
+                 tibble(sentiment = unlist(abs_means_bc_per_doc), corpus = 'bc'))
+m3 <- lm(sentiment ~ corpus, data = data_m3)
+emmeans(m3, specs = pairwise ~ corpus)
+
+## means overall
+mList_lc <- unlist(collection[[1]]$doc_sentiment)
+mean(abs(mList_lc))
+mList_bc <- unlist(collection[[2]]$doc_sentiment)
+mean(abs(mList_bc))
+## significance test
+data_m4 <- rbind(tibble(sentiment = abs(mList_lc), corpus = 'lc'),
+                 tibble(sentiment = abs(mList_bc), corpus = 'bc'))
+m4 <- lm(sentiment ~ corpus, data = data_m4)
+emmeans(m4, specs = pairwise ~ corpus)
