@@ -28,15 +28,32 @@ emm1 <- emmeans(m1, specs = pairwise ~ cat)
 emm1
 res1 <- xtable(emm1$contrasts)
 print(res1, include.rownames = F)
-# same results in anove
+# same results in anova
 m1a <- aov(abs(sentiWords) ~ cat, data = df)
 emmeans(m1a, specs = pairwise ~ cat)
 
-# differences between concept classes
-m2 <- lm(sentiWords ~ cat*TARGET_pol_new, data = df)
+# differences between concept classes incl target polarity (NOTE: without descriptive concepts)
+m2 <- lm(sentiWords ~ cat*TARGET_pol_new, data = df[!df$cat=="Desc.",])
 emm2 <- emmeans(m2, specs = pairwise ~ cat, by ='TARGET_pol_new')
 res2 <- xtable(emm2$contrasts)
-print(res1, include.rownames = F)
+print(res2, include.rownames = F)
+
+# differences between concept classes incl target polarity (NOTE: without descriptive concepts)
+vec <- df[df$cat=="Desc.",] %>% 
+  group_by(TARGET) %>% 
+  summarise(avg = mean(sentiWords))
+dfx <- df %>% 
+  mutate(
+    TARGET_pol_new_recoded = case_when(
+      TARGET %in% vec$TARGET[vec$avg > 0] ~ 'positive',
+      TARGET %in% vec$TARGET[vec$avg < 0] ~ 'negative',
+      TRUE ~ TARGET_pol_new
+    )
+  )
+m3 <- lm(sentiWords ~ cat*TARGET_pol_new_recoded, data = dfx)
+emm3 <- emmeans(m3, specs = pairwise ~ cat, by ='TARGET_pol_new_recoded')
+res3 <- xtable(emm3$contrasts)
+print(res3, include.rownames = F)
 
 # K-Means Cluster Analysis
 aggr <- df %>% 
