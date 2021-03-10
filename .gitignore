@@ -4,3 +4,4 @@
 *.rda
 *.RData
 *.RDS.gzip
+*.csv
